@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wreckloud.driver.mapper.DriverRecordMapper">
+
+    <resultMap id="DriverRecordMap" type="com.wreckloud.driver.domain.DriverRecord">
+        <id column="id" property="id"/>
+        <result column="location_status" property="locationStatus"
+                javaType="com.wreckloud.driver.domain.LocationStatus"/>
+    </resultMap>
+
+    <sql id="columns">
+        id, submission_token, driver_name, phone, license_plate, vehicle_type, destination,
+        latitude, longitude, location_address, location_accuracy, location_status, located_at,
+        created_at, updated_at, updated_by, deleted, deleted_at, deleted_by
+    </sql>
+
+    <sql id="activeFilters">
+        deleted = 0
+        <if test="startTime != null">
+            AND created_at &gt;= #{startTime}
+        </if>
+        <if test="endTimeExclusive != null">
+            AND created_at &lt; #{endTimeExclusive}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND (
+                driver_name LIKE CONCAT('%', #{keyword}, '%') ESCAPE '\\'
+                OR license_plate LIKE CONCAT('%', #{keyword}, '%') ESCAPE '\\'
+                OR destination LIKE CONCAT('%', #{keyword}, '%') ESCAPE '\\'
+            )
+        </if>
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO driver_record (
+            submission_token, driver_name, phone, license_plate, vehicle_type, destination,
+            latitude, longitude, location_address, location_accuracy, location_status, located_at,
+            created_at, updated_at, deleted
+        ) VALUES (
+            #{submissionToken}, #{driverName}, #{phone}, #{licensePlate}, #{vehicleType}, #{destination},
+            #{latitude}, #{longitude}, #{locationAddress}, #{locationAccuracy}, #{locationStatus}, #{locatedAt},
+            #{createdAt}, #{updatedAt}, 0
+        )
+    </insert>
+
+    <select id="findBySubmissionToken" resultMap="DriverRecordMap">
+        SELECT <include refid="columns"/>
+        FROM driver_record
+        WHERE submission_token = #{submissionToken}
+    </select>
+
+    <select id="findById" resultMap="DriverRecordMap">
+        SELECT <include refid="columns"/>
+        FROM driver_record
+        WHERE id = #{id} AND deleted = 0
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM driver_record
+        WHERE <include refid="activeFilters"/>
+    </select>
+
+    <select id="selectPage" resultMap="DriverRecordMap">
+        SELECT <include refid="columns"/>
+        FROM driver_record
+        WHERE <include refid="activeFilters"/>
+        ORDER BY created_at DESC, id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="selectForExport" resultMap="DriverRecordMap">
+        SELECT <include refid="columns"/>
+        FROM driver_record
+        WHERE <include refid="activeFilters"/>
+        ORDER BY created_at DESC, id DESC
+    </select>
+
+    <update id="updateEditableFields">
+        UPDATE driver_record
+        SET driver_name = #{driverName},
+            phone = #{phone},
+            license_plate = #{licensePlate},
+            vehicle_type = #{vehicleType},
+            destination = #{destination},
+            updated_at = #{updatedAt},
+            updated_by = #{updatedBy}
+        WHERE id = #{id} AND deleted = 0
+    </update>
+
+    <update id="softDelete">
+        UPDATE driver_record
+        SET deleted = 1,
+            deleted_at = #{deletedAt},
+            deleted_by = #{operator},
+            updated_at = #{deletedAt},
+            updated_by = #{operator}
+        WHERE id = #{id} AND deleted = 0
+    </update>
+</mapper>

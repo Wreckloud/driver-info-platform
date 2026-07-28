@@ -1,0 +1,56 @@
+spring:
+  application:
+    name: driver-info-platform
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/driver_info?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC&connectionTimeZone=UTC&forceConnectionTimeZoneToSession=true}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:}
+  jackson:
+    default-property-inclusion: non_null
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+server:
+  port: ${SERVER_PORT:8080}
+  forward-headers-strategy: framework
+  servlet:
+    session:
+      timeout: 8h
+      cookie:
+        http-only: true
+        secure: ${SESSION_COOKIE_SECURE:false}
+        same-site: strict
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+
+app:
+  admin:
+    username: ${ADMIN_USERNAME:admin}
+    password-bcrypt: ${ADMIN_PASSWORD_BCRYPT:}
+  tencent-map:
+    key: ${TENCENT_MAP_KEY:}
+    endpoint: ${TENCENT_MAP_ENDPOINT:https://apis.map.qq.com/ws/geocoder/v1/}
+
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  level:
+    root: info
+    com.wreckloud.driver: info
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health

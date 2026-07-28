@@ -1,0 +1,235 @@
+<script setup>
+import { computed, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Location, RefreshRight, Van } from '@element-plus/icons-vue'
+import { createDriverRecord, resolveLocationAddress } from '@/api/driver'
+import { LOCATION_STATUS_LABELS, locationDisplayText } from '@/constants/location'
+import {
+  clearSavedDriverInfo,
+  createSubmissionToken,
+  loadSavedDriverInfo,
+  mapLocationError,
+  saveDriverInfo
+} from '@/utils/driver'
+
+const SUCCESS_KEY = 'driver-submit-success'
+const router = useRouter()
+const formRef = ref()
+const locating = ref(false)
+const resolvingLocation = ref(false)
+const locationAddress = ref('')
+const submitting = ref(false)
+const confirmVisible = ref(false)
+const pendingPayload = ref(null)
+const pendingLocationAddress = ref('')
+let locationRequestSequence = 0
+
+const savedInfo = loadSavedDriverInfo()
+const form = reactive({
+  submissionToken: createSubmissionToken(),
+  driverName: savedInfo.driverName || '',
+  phone: savedInfo.phone || '',
+  licensePlate: savedInfo.licensePlate || '',
+  vehicleType: savedInfo.vehicleType || '',
+  destination: '',
+  locationStatus: 'NOT_REQUESTED',
+  latitude: null,
+  longitude: null,
+  locationAccuracy: null,
+  locatedAt: null
+})
+
+const rules = {
+  driverName: [{ required: true, message: '请输入姓名', trigger: 'blur' }, { max: 50, message: '姓名不能超过 50 字', trigger: 'blur' }],
+  phone: [{ required: true, message: '请输入手机号', trigger: 'blur' }, { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的 11 位手机号', trigger: 'blur' }],
+  licensePlate: [{ required: true, message: '请输入车牌号', trigger: 'blur' }, { pattern: /^[\u4e00-\u9fa5A-Za-z0-9-]{5,12}$/, message: '请输入正确的车牌号', trigger: 'blur' }],
+  vehicleType: [{ required: true, message: '请输入车型', trigger: 'blur' }, { max: 50, message: '车型不能超过 50 字', trigger: 'blur' }],
+  destination: [{ required: true, message: '请输入目的地', trigger: 'blur' }, { max: 200, message: '目的地不能超过 200 字', trigger: 'blur' }]
+}
+
+const locationTone = computed(() => form.locationStatus === 'SUCCESS' ? 'success' : form.locationStatus === 'NOT_REQUESTED' ? 'neutral' : 'warning')
+const locationText = computed(() => {
+  if (locating.value) return '正在获取位置…'
+  if (resolvingLocation.value) return '正在解析位置…'
+  return locationDisplayText(form.locationStatus, locationAddress.value)
+})
+const locationBusy = computed(() => locating.value || resolvingLocation.value)
+
+function clearLocation() {
+  form.latitude = null
+  form.longitude = null
+  form.locationAccuracy = null
+  form.locatedAt = null
+  locationAddress.value = ''
+  resolvingLocation.value = false
+}
+
+function locate() {
+  const requestSequence = ++locationRequestSequence
+  clearLocation()
+  if (!navigator.geolocation) {
+    form.locationStatus = 'FAILED'
+    ElMessage.warning('当前浏览器不支持定位，仍可继续提交')
+    return
+  }
+  locating.value = true
+  form.locationStatus = 'NOT_REQUESTED'
+  navigator.geolocation.getCurrentPosition(
+    async (position) => {
+      if (requestSequence !== locationRequestSequence) return
+      form.latitude = position.coords.latitude
+      form.longitude = position.coords.longitude
+      form.locationAccuracy = position.coords.accuracy
+      form.locatedAt = new Date(position.timestamp).toISOString()
+      form.locationStatus = 'SUCCESS'
+      locating.value = false
+      resolvingLocation.value = true
+      try {
+        const result = await resolveLocationAddress(form.latitude, form.longitude)
+        if (requestSequence === locationRequestSequence) {
+          locationAddress.value = result.address || ''
+        }
+      } catch (error) {
+        if (requestSequence === locationRequestSequence) {
+          ElMessage.warning(error.status === 429 ? error.message : '坐标已获取，但文字地址解析失败')
+        }
+      } finally {
+        if (requestSequence === locationRequestSequence) {
+          resolvingLocation.value = false
+        }
+      }
+    },
+    (error) => {
+      if (requestSequence !== locationRequestSequence) return
+      clearLocation()
+      form.locationStatus = mapLocationError(error.code)
+      locating.value = false
+      ElMessage.warning(`${LOCATION_STATUS_LABELS[form.locationStatus]}，仍可继续提交`)
+    },
+    { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
+  )
+}
+
+async function clearSavedInfo() {
+  await ElMessageBox.confirm('将清除本机记住的姓名、电话、车牌和车型，是否继续？', '清除常用信息', { type: 'warning' })
+  clearSavedDriverInfo()
+  form.driverName = ''
+  form.phone = ''
+  form.licensePlate = ''
+  form.vehicleType = ''
+  ElMessage.success('常用信息已清除')
+}
+
+async function requestConfirmation() {
+  const valid = await formRef.value.validate().catch(() => false)
+  if (!valid || submitting.value) return
+  pendingPayload.value = {
+    ...form,
+    driverName: form.driverName.trim(),
+    phone: form.phone.trim(),
+    licensePlate: form.licensePlate.trim().toUpperCase(),
+    vehicleType: form.vehicleType.trim(),
+    destination: form.destination.trim()
+  }
+  pendingLocationAddress.value = locationAddress.value
+  confirmVisible.value = true
+}
+
+async function confirmSubmit() {
+  if (!pendingPayload.value || submitting.value) return
+  submitting.value = true
+  try {
+    const payload = pendingPayload.value
+    const result = await createDriverRecord(payload)
+    saveDriverInfo(payload)
+    sessionStorage.setItem(SUCCESS_KEY, JSON.stringify(result))
+    confirmVisible.value = false
+    await router.replace('/driver/success')
+  } catch (error) {
+    ElMessage.error(error.message)
+  } finally {
+    submitting.value = false
+  }
+}
+</script>
+
+<template>
+  <main class="driver-page">
+    <section class="driver-card">
+      <header class="driver-header">
+        <div class="brand-mark"><el-icon><Van /></el-icon></div>
+        <div>
+          <p class="eyebrow">DRIVER CHECK-IN</p>
+          <h1>司机出车登记</h1>
+          <p>每次出车请重新提交一条记录</p>
+        </div>
+      </header>
+
+      <el-form ref="formRef" :model="form" :rules="rules" label-position="top" size="large" @submit.prevent="requestConfirmation">
+        <div class="field-grid">
+          <el-form-item label="姓名" prop="driverName">
+            <el-input v-model.trim="form.driverName" maxlength="50" placeholder="请输入司机姓名" />
+          </el-form-item>
+          <el-form-item label="手机号" prop="phone">
+            <el-input v-model.trim="form.phone" maxlength="11" inputmode="numeric" placeholder="请输入手机号" />
+          </el-form-item>
+          <el-form-item label="车牌号" prop="licensePlate">
+            <el-input v-model.trim="form.licensePlate" maxlength="12" placeholder="例如：京A12345" @blur="form.licensePlate = form.licensePlate.toUpperCase()" />
+          </el-form-item>
+          <el-form-item label="车型" prop="vehicleType">
+            <el-input v-model.trim="form.vehicleType" maxlength="50" placeholder="例如：厢式货车" />
+          </el-form-item>
+        </div>
+        <el-form-item label="目的地" prop="destination">
+          <el-input v-model.trim="form.destination" maxlength="200" show-word-limit placeholder="请输入本次目的地" />
+        </el-form-item>
+
+        <section class="location-panel">
+          <div class="location-copy">
+            <div class="location-title"><el-icon><Location /></el-icon><span>起始位置</span></div>
+            <p :class="['location-state', locationTone]">{{ locationText }}</p>
+            <small>位置信息仅用于本次出车登记；定位失败或拒绝授权仍可提交。</small>
+          </div>
+          <el-button :loading="locationBusy" :disabled="locationBusy" :icon="form.locationStatus === 'SUCCESS' ? RefreshRight : Location" @click="locate">
+            {{ form.locationStatus === 'SUCCESS' ? '重新定位' : '获取当前位置' }}
+          </el-button>
+        </section>
+
+        <el-button class="submit-button" type="primary" size="large" native-type="submit" :loading="submitting">
+          核对并提交登记
+        </el-button>
+      </el-form>
+
+      <button class="text-action" type="button" @click="clearSavedInfo">清除本机保存的常用信息</button>
+    </section>
+
+    <el-dialog
+      v-model="confirmVisible"
+      title="请再次确认登记信息"
+      width="520px"
+      class="driver-confirm-dialog"
+      :close-on-click-modal="!submitting"
+      :close-on-press-escape="!submitting"
+      :show-close="!submitting"
+    >
+      <p class="confirm-hint">提交后将生成一条新的出车记录，请确认以下信息无误。</p>
+      <dl v-if="pendingPayload" class="confirm-list">
+        <div><dt>姓名</dt><dd>{{ pendingPayload.driverName }}</dd></div>
+        <div><dt>手机号</dt><dd>{{ pendingPayload.phone }}</dd></div>
+        <div><dt>车牌号</dt><dd>{{ pendingPayload.licensePlate }}</dd></div>
+        <div><dt>车型</dt><dd>{{ pendingPayload.vehicleType }}</dd></div>
+        <div><dt>目的地</dt><dd>{{ pendingPayload.destination }}</dd></div>
+        <div><dt>定位状态</dt><dd>{{ LOCATION_STATUS_LABELS[pendingPayload.locationStatus] }}</dd></div>
+        <div>
+          <dt>起始位置</dt>
+          <dd>{{ locationDisplayText(pendingPayload.locationStatus, pendingLocationAddress) }}</dd>
+        </div>
+      </dl>
+      <template #footer>
+        <el-button :disabled="submitting" @click="confirmVisible = false">返回修改</el-button>
+        <el-button type="primary" :loading="submitting" @click="confirmSubmit">确认无误并提交</el-button>
+      </template>
+    </el-dialog>
+  </main>
+</template>

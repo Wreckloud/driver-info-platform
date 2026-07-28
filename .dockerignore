@@ -1,0 +1,12 @@
+.git
+.env
+**/.idea
+**/.vscode
+**/node_modules
+**/node_modules_failed_install
+**/dist
+**/dist-qr
+**/target
+deploy/certs/*.pem
+deploy/backups
+release
