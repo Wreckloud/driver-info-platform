@@ -1,0 +1,19 @@
+FROM maven:3.9.9-eclipse-temurin-17 AS build
+
+ENV MAVEN_OPTS="-Xmx384m -XX:MaxMetaspaceSize=128m"
+WORKDIR /workspace
+COPY backend/pom.xml ./pom.xml
+RUN mvn -q -DskipTests dependency:go-offline
+COPY backend/src ./src
+RUN mvn -q -DskipTests package \
+    && cp target/driver-info-platform-*.jar /workspace/app.jar
+
+FROM eclipse-temurin:17-jre-alpine
+
+WORKDIR /app
+RUN addgroup -S app && adduser -S app -G app
+COPY --from=build /workspace/app.jar /app/app.jar
+
+USER app
+EXPOSE 8080
+ENTRYPOINT ["java", "-Duser.timezone=UTC", "-jar", "/app/app.jar"]

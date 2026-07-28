@@ -1,0 +1,10 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: deploy/server/Dockerfile.api.source
+
+  web:
+    build:
+      context: .
+      dockerfile: deploy/server/Dockerfile.web.source

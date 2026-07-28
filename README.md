@@ -81,7 +81,7 @@ npm run dev
 
 完整步骤见 [部署与运维说明](docs/deployment.md)，逐项操作见 [上线检查单](docs/release-checklist.md)。生产环境必须配置 HTTPS、腾讯位置服务 Key、随机数据库密码和 BCrypt 管理员密码，禁止使用本地默认凭据。
 
-`wreckloud.com` 现有服务器请使用 [低内存共存部署说明](docs/wreckloud-server-deployment.md)。该方案复用现有 MySQL、使用 `driver.wreckloud.com` 子域名，并且不会占用主站已有的 80/443/8080 端口。
+`wreckloud.com` 现有服务器请使用 [低内存共存部署说明](docs/wreckloud-server-deployment.md)。该方案复用现有 MySQL、使用 `driver.wreckloud.com` 子域名，并且不会占用主站已有的 80/443/8080 端口。首次上线后可按 [GitHub 私有仓库部署说明](docs/github-deployment.md) 切换为只读 Deploy Key 拉取和更新。
 
 ## 验证命令
 
