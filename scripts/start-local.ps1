@@ -13,6 +13,11 @@ $viewerPasswordHashPath = Join-Path $runtimePath 'viewer-password.hash'
 $mysqlPort = 3307
 $backendPort = 8080
 $frontendPort = 5173
+$utf8NoBomEncoding = New-Object System.Text.UTF8Encoding($false)
+
+function Set-Utf8NoBomContent([string]$Path, [string]$Value) {
+    [System.IO.File]::WriteAllText($Path, $Value, $utf8NoBomEncoding)
+}
 
 function Assert-PortAvailable([int]$Port) {
     if (Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue) {
@@ -63,7 +68,7 @@ if (-not (Test-Path -LiteralPath $passwordHashPath)) {
         } finally {
             Pop-Location
         }
-        Set-Content -LiteralPath $passwordHashPath -Value $passwordHash.Trim() -Encoding utf8NoBOM
+        Set-Utf8NoBomContent -Path $passwordHashPath -Value $passwordHash.Trim()
     } finally {
         Remove-Item Env:ADMIN_PASSWORD_PLAIN -ErrorAction SilentlyContinue
         $plainPassword = $null
@@ -86,7 +91,7 @@ if (-not (Test-Path -LiteralPath $viewerPasswordHashPath)) {
         } finally {
             Pop-Location
         }
-        Set-Content -LiteralPath $viewerPasswordHashPath -Value $passwordHash.Trim() -Encoding utf8NoBOM
+        Set-Utf8NoBomContent -Path $viewerPasswordHashPath -Value $passwordHash.Trim()
     } finally {
         Remove-Item Env:ADMIN_PASSWORD_PLAIN -ErrorAction SilentlyContinue
         $plainPassword = $null
@@ -148,7 +153,7 @@ $processInfo = [ordered]@{
     frontendLauncherPid = $frontendProcess.Id
     startedAt = (Get-Date).ToString('o')
 }
-$processInfo | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $runtimePath 'local-processes.json') -Encoding utf8NoBOM
+Set-Utf8NoBomContent -Path (Join-Path $runtimePath 'local-processes.json') -Value ($processInfo | ConvertTo-Json)
 
 Write-Output 'Local environment is ready.'
 Write-Output "Driver page: http://127.0.0.1:$frontendPort/driver"

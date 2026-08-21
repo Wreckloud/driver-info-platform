@@ -9,7 +9,7 @@ function Stop-LocalProcessTree([int]$ProcessId) {
         Stop-LocalProcessTree -ProcessId $child.ProcessId
     }
     if (Get-Process -Id $ProcessId -ErrorAction SilentlyContinue) {
-        Stop-Process -Id $ProcessId -Force
+        Stop-Process -Id $ProcessId -Force -ErrorAction SilentlyContinue
     }
 }
 
