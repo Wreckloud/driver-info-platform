@@ -253,42 +253,44 @@ onUnmounted(() => {
           <el-input v-model.trim="form.destination" maxlength="200" show-word-limit placeholder="请输入本次目的地" />
         </el-form-item>
         <el-form-item label="备注（选填）" prop="remark">
-          <el-input v-model.trim="form.remark" type="textarea" :rows="3" maxlength="500" show-word-limit placeholder="可填写本次出车的补充说明" />
+          <el-input v-model.trim="form.remark" type="textarea" :rows="2" maxlength="500" show-word-limit placeholder="可填写本次出车的补充说明" />
         </el-form-item>
 
-        <section :class="['location-panel', { 'is-retryable': locationRetryable }]">
-          <div
-            class="location-copy"
-            :role="locationRetryable ? 'button' : undefined"
-            :tabindex="locationRetryable ? 0 : undefined"
-            :aria-label="locationRetryable ? '重新获取起始位置' : undefined"
-            @click="retryLocation"
-            @keydown.enter="retryLocation"
-            @keydown.space.prevent="retryLocation"
-          >
-            <div class="location-title"><el-icon><Location /></el-icon><span>起始位置</span></div>
-            <p :class="['location-state', locationTone]">{{ locationText }}</p>
-            <span v-if="locationRetryable" class="location-retry-hint"><el-icon><RefreshRight /></el-icon>点击卡片重新获取</span>
-            <small>位置信息仅用于本次出车登记；定位失败或拒绝授权仍可提交。</small>
-          </div>
-          <input ref="photoInput" class="visually-hidden" type="file" accept="image/*" capture="environment" @change="capturePhoto" />
-          <el-button :loading="processingPhotos" :disabled="photoItems.length >= 9" :icon="Camera" @click="openCamera">
-            {{ photoItems.length ? `继续拍照 ${photoItems.length}/9` : '拍摄照片' }}
-          </el-button>
-        </section>
-
-        <section class="photo-panel">
-          <div class="photo-panel-heading">
-            <div><strong>出车照片</strong><span>至少 1 张，最多 9 张</span></div>
-            <small>照片拍摄后会自动压缩，点击缩略图可放大查看</small>
-          </div>
-          <div v-if="photoItems.length" class="photo-grid">
-            <div v-for="(photo, index) in photoItems" :key="photo.url" class="photo-item">
-              <el-image :src="photo.url" fit="cover" :preview-src-list="photoPreviewUrls" :initial-index="index" preview-teleported />
-              <button type="button" aria-label="删除照片" @click="removePhoto(index)"><el-icon><Close /></el-icon></button>
+        <section :class="['evidence-panel', { 'is-retryable': locationRetryable }]">
+          <div class="location-row">
+            <div
+              class="location-copy"
+              :role="locationRetryable ? 'button' : undefined"
+              :tabindex="locationRetryable ? 0 : undefined"
+              :aria-label="locationRetryable ? '重新获取起始位置' : undefined"
+              @click="retryLocation"
+              @keydown.enter="retryLocation"
+              @keydown.space.prevent="retryLocation"
+            >
+              <div class="location-title"><el-icon><Location /></el-icon><span>起始位置</span></div>
+              <p :class="['location-state', locationTone]">{{ locationText }}</p>
+              <span v-if="locationRetryable" class="location-retry-hint"><el-icon><RefreshRight /></el-icon>点击卡片重新获取</span>
+              <small>定位失败或拒绝授权仍可提交。</small>
             </div>
+            <input ref="photoInput" class="visually-hidden" type="file" accept="image/*" capture="environment" @change="capturePhoto" />
+            <el-button :loading="processingPhotos" :disabled="photoItems.length >= 9" :icon="Camera" @click="openCamera">
+              {{ photoItems.length ? `继续拍照 ${photoItems.length}/9` : '拍摄照片' }}
+            </el-button>
           </div>
-          <el-empty v-else :image-size="54" description="尚未添加照片" />
+
+          <div class="photo-section">
+            <div class="photo-panel-heading">
+              <div><strong>出车照片</strong><span>至少 1 张，最多 9 张；拍摄后自动压缩</span></div>
+              <small>点击照片可放大</small>
+            </div>
+            <div v-if="photoItems.length" class="photo-grid">
+              <div v-for="(photo, index) in photoItems" :key="photo.url" class="photo-item">
+                <el-image :src="photo.url" fit="cover" :preview-src-list="photoPreviewUrls" :initial-index="index" preview-teleported />
+                <button type="button" aria-label="删除照片" @click="removePhoto(index)"><el-icon><Close /></el-icon></button>
+              </div>
+            </div>
+            <p v-else class="photo-empty">尚未拍摄照片</p>
+          </div>
         </section>
 
         <el-button class="submit-button" type="primary" size="large" native-type="submit" :loading="submitting">
