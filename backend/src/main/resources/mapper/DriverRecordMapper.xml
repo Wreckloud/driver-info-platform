@@ -11,7 +11,7 @@
     </resultMap>
 
     <sql id="columns">
-        id, submission_token, driver_name, phone, license_plate, vehicle_type, destination,
+        id, submission_token, project, driver_name, phone, license_plate, vehicle_type, quantity, destination, remark,
         latitude, longitude, location_address, location_accuracy, location_status, located_at,
         created_at, updated_at, updated_by, deleted, deleted_at, deleted_by
     </sql>
@@ -26,20 +26,23 @@
         </if>
         <if test="keyword != null and keyword != ''">
             AND (
-                driver_name LIKE CONCAT('%', #{keyword}, '%') ESCAPE '\\'
+                project LIKE CONCAT('%', #{keyword}, '%') ESCAPE '\\'
+                OR driver_name LIKE CONCAT('%', #{keyword}, '%') ESCAPE '\\'
                 OR license_plate LIKE CONCAT('%', #{keyword}, '%') ESCAPE '\\'
                 OR destination LIKE CONCAT('%', #{keyword}, '%') ESCAPE '\\'
+                OR remark LIKE CONCAT('%', #{keyword}, '%') ESCAPE '\\'
             )
         </if>
     </sql>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO driver_record (
-            submission_token, driver_name, phone, license_plate, vehicle_type, destination,
+            submission_token, project, driver_name, phone, license_plate, vehicle_type, quantity, destination, remark,
             latitude, longitude, location_address, location_accuracy, location_status, located_at,
             created_at, updated_at, deleted
         ) VALUES (
-            #{submissionToken}, #{driverName}, #{phone}, #{licensePlate}, #{vehicleType}, #{destination},
+            #{submissionToken}, #{project}, #{driverName}, #{phone}, #{licensePlate}, #{vehicleType},
+            #{quantity}, #{destination}, #{remark},
             #{latitude}, #{longitude}, #{locationAddress}, #{locationAccuracy}, #{locationStatus}, #{locatedAt},
             #{createdAt}, #{updatedAt}, 0
         )
@@ -79,11 +82,14 @@
 
     <update id="updateEditableFields">
         UPDATE driver_record
-        SET driver_name = #{driverName},
+        SET project = #{project},
+            driver_name = #{driverName},
             phone = #{phone},
             license_plate = #{licensePlate},
             vehicle_type = #{vehicleType},
+            quantity = #{quantity},
             destination = #{destination},
+            remark = #{remark},
             updated_at = #{updatedAt},
             updated_by = #{updatedBy}
         WHERE id = #{id} AND deleted = 0

@@ -44,7 +44,7 @@ $appVersion = Get-DotEnvValue -Name 'APP_VERSION'
 $publicBaseUrl = Get-DotEnvValue -Name 'PUBLIC_BASE_URL'
 $adminPasswordBcrypt = Get-DotEnvValue -Name 'ADMIN_PASSWORD_BCRYPT'
 if ([string]::IsNullOrWhiteSpace($appVersion)) {
-    $appVersion = '1.0.0'
+    $appVersion = '1.1.0'
 }
 if ($publicBaseUrl -notmatch '^https://[^/\s]+$') {
     throw 'PUBLIC_BASE_URL must be a complete HTTPS origin without a trailing path.'
@@ -104,7 +104,7 @@ New-Item -ItemType Directory -Force -Path (Join-Path $bundleDir 'artifacts\front
 New-Item -ItemType Directory -Force -Path (Join-Path $bundleDir 'artifacts\qrcode') | Out-Null
 New-Item -ItemType Directory -Force -Path (Join-Path $bundleDir 'deploy') | Out-Null
 
-Copy-Item -LiteralPath (Join-Path $projectDir 'backend\target\driver-info-platform-1.0.0.jar') `
+Copy-Item -LiteralPath (Join-Path $projectDir 'backend\target\driver-info-platform-1.1.0.jar') `
     -Destination (Join-Path $bundleDir 'artifacts\backend\app.jar')
 Copy-Item -Path (Join-Path $projectDir 'frontend\dist\*') `
     -Destination (Join-Path $bundleDir 'artifacts\frontend') -Recurse

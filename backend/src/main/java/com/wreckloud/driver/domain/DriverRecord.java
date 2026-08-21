@@ -15,11 +15,14 @@ import java.time.LocalDateTime;
 public class DriverRecord {
     private Long id;
     private String submissionToken;
+    private String project;
     private String driverName;
     private String phone;
     private String licensePlate;
     private String vehicleType;
+    private String quantity;
     private String destination;
+    private String remark;
     private BigDecimal latitude;
     private BigDecimal longitude;
     private String locationAddress;

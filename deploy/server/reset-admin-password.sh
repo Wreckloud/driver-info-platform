@@ -41,7 +41,7 @@ trap - EXIT HUP INT TERM
 [ "$password" = "$password_confirmation" ] || fail "the two passwords do not match"
 
 app_version=$(dotenv_value APP_VERSION)
-app_version=${app_version:-1.0.0}
+app_version=${app_version:-1.1.0}
 api_image="driver-info-platform-api:${app_version}"
 docker image inspect "$api_image" >/dev/null 2>&1 || fail "image $api_image does not exist"
 

@@ -15,9 +15,12 @@ import java.time.Instant;
 @Schema(description = "司机提交成功摘要")
 public record DriverRecordSummaryVO(
         Long id,
+        String project,
         String driverName,
         String licensePlate,
+        String quantity,
         String destination,
+        String remark,
         LocationStatus locationStatus,
         BigDecimal latitude,
         BigDecimal longitude,

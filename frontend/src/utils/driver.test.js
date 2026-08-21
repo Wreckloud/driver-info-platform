@@ -31,7 +31,8 @@ describe('driver utilities', () => {
     const storage = memoryStorage()
     saveDriverInfo({
       driverName: '张三', phone: '13800138000', licensePlate: '京A12345',
-      vehicleType: '厢式货车', destination: '天津', latitude: 39.9
+      vehicleType: '厢式货车', project: '冷链A1', quantity: '20件（冻品）', destination: '天津',
+      remark: '注意冷藏', latitude: 39.9
     }, storage)
     expect(loadSavedDriverInfo(storage)).toEqual({
       driverName: '张三', phone: '13800138000', licensePlate: '京A12345', vehicleType: '厢式货车'

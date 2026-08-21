@@ -38,7 +38,7 @@ cd D:\Portfolio\project\DriverInfoPlatform
 脚本会运行后端和前端测试、构建 JAR 与前端静态文件、生成正式二维码，然后输出：
 
 ```text
-release\driver-info-platform-1.0.0.tar.gz
+release\driver-info-platform-1.1.0.tar.gz
 ```
 
 压缩包包含 `.env`，不得公开上传或提交到 Git。
@@ -49,8 +49,8 @@ release\driver-info-platform-1.0.0.tar.gz
 
 ```sh
 mkdir -p /home/wreckloud/apps
-tar -xzf /home/wreckloud/driver-info-platform-1.0.0.tar.gz -C /home/wreckloud/apps
-cd /home/wreckloud/apps/driver-info-platform-1.0.0
+tar -xzf /home/wreckloud/driver-info-platform-1.1.0.tar.gz -C /home/wreckloud/apps
+cd /home/wreckloud/apps/driver-info-platform-1.1.0
 chmod +x deploy/server/*.sh
 ./deploy/server/deploy.sh
 ```
@@ -76,7 +76,7 @@ chmod +x deploy/server/*.sh
 先安装 HTTP 站点配置。该脚本会执行 `nginx -t`，只有检查通过才会重新加载 Nginx：
 
 ```sh
-sudo /home/wreckloud/apps/driver-info-platform-1.0.0/deploy/server/install-nginx-site.sh
+sudo /home/wreckloud/apps/driver-info-platform-1.1.0/deploy/server/install-nginx-site.sh
 ```
 
 确认 `http://driver.wreckloud.com/driver` 能到达页面后，使用现有 Certbot 签发独立证书并自动启用 HTTPS：

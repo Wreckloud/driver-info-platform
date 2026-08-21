@@ -28,11 +28,14 @@ let locationRequestSequence = 0
 const savedInfo = loadSavedDriverInfo()
 const form = reactive({
   submissionToken: createSubmissionToken(),
+  project: '',
   driverName: savedInfo.driverName || '',
   phone: savedInfo.phone || '',
   licensePlate: savedInfo.licensePlate || '',
   vehicleType: savedInfo.vehicleType || '',
+  quantity: '',
   destination: '',
+  remark: '',
   locationStatus: 'NOT_REQUESTED',
   latitude: null,
   longitude: null,
@@ -41,11 +44,18 @@ const form = reactive({
 })
 
 const rules = {
+  project: [
+    { required: true, message: '请输入项目', trigger: 'blur' },
+    { max: 100, message: '项目不能超过 100 字', trigger: 'blur' },
+    { pattern: /^[\u4e00-\u9fa5A-Za-z0-9 ]+$/, message: '项目只能包含汉字、英文字母、数字和空格', trigger: 'blur' }
+  ],
   driverName: [{ required: true, message: '请输入姓名', trigger: 'blur' }, { max: 50, message: '姓名不能超过 50 字', trigger: 'blur' }],
   phone: [{ required: true, message: '请输入手机号', trigger: 'blur' }, { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的 11 位手机号', trigger: 'blur' }],
   licensePlate: [{ required: true, message: '请输入车牌号', trigger: 'blur' }, { pattern: /^[\u4e00-\u9fa5A-Za-z0-9-]{5,12}$/, message: '请输入正确的车牌号', trigger: 'blur' }],
   vehicleType: [{ required: true, message: '请输入车型', trigger: 'blur' }, { max: 50, message: '车型不能超过 50 字', trigger: 'blur' }],
-  destination: [{ required: true, message: '请输入目的地', trigger: 'blur' }, { max: 200, message: '目的地不能超过 200 字', trigger: 'blur' }]
+  quantity: [{ required: true, message: '请输入数量', trigger: 'blur' }, { max: 100, message: '数量不能超过 100 字', trigger: 'blur' }],
+  destination: [{ required: true, message: '请输入目的地', trigger: 'blur' }, { max: 200, message: '目的地不能超过 200 字', trigger: 'blur' }],
+  remark: [{ max: 500, message: '备注不能超过 500 字', trigger: 'blur' }]
 }
 
 const locationTone = computed(() => form.locationStatus === 'SUCCESS' ? 'success' : form.locationStatus === 'NOT_REQUESTED' ? 'neutral' : 'warning')
@@ -126,11 +136,14 @@ async function requestConfirmation() {
   if (!valid || submitting.value) return
   pendingPayload.value = {
     ...form,
+    project: form.project.trim(),
     driverName: form.driverName.trim(),
     phone: form.phone.trim(),
     licensePlate: form.licensePlate.trim().toUpperCase(),
     vehicleType: form.vehicleType.trim(),
-    destination: form.destination.trim()
+    quantity: form.quantity.trim(),
+    destination: form.destination.trim(),
+    remark: form.remark.trim() || null
   }
   pendingLocationAddress.value = locationAddress.value
   confirmVisible.value = true
@@ -167,6 +180,9 @@ async function confirmSubmit() {
       </header>
 
       <el-form ref="formRef" :model="form" :rules="rules" label-position="top" size="large" @submit.prevent="requestConfirmation">
+        <el-form-item label="项目" prop="project">
+          <el-input v-model.trim="form.project" maxlength="100" show-word-limit placeholder="请输入本次业务项目" />
+        </el-form-item>
         <div class="field-grid">
           <el-form-item label="姓名" prop="driverName">
             <el-input v-model.trim="form.driverName" maxlength="50" placeholder="请输入司机姓名" />
@@ -181,8 +197,14 @@ async function confirmSubmit() {
             <el-input v-model.trim="form.vehicleType" maxlength="50" placeholder="例如：厢式货车" />
           </el-form-item>
         </div>
+        <el-form-item label="数量" prop="quantity">
+          <el-input v-model.trim="form.quantity" maxlength="100" show-word-limit placeholder="例如：20件（冻品）" />
+        </el-form-item>
         <el-form-item label="目的地" prop="destination">
           <el-input v-model.trim="form.destination" maxlength="200" show-word-limit placeholder="请输入本次目的地" />
+        </el-form-item>
+        <el-form-item label="备注（选填）" prop="remark">
+          <el-input v-model.trim="form.remark" type="textarea" :rows="3" maxlength="500" show-word-limit placeholder="可填写本次出车的补充说明" />
         </el-form-item>
 
         <section class="location-panel">
@@ -215,11 +237,14 @@ async function confirmSubmit() {
     >
       <p class="confirm-hint">提交后将生成一条新的出车记录，请确认以下信息无误。</p>
       <dl v-if="pendingPayload" class="confirm-list">
+        <div><dt>项目</dt><dd>{{ pendingPayload.project }}</dd></div>
         <div><dt>姓名</dt><dd>{{ pendingPayload.driverName }}</dd></div>
         <div><dt>手机号</dt><dd>{{ pendingPayload.phone }}</dd></div>
         <div><dt>车牌号</dt><dd>{{ pendingPayload.licensePlate }}</dd></div>
         <div><dt>车型</dt><dd>{{ pendingPayload.vehicleType }}</dd></div>
+        <div><dt>数量</dt><dd>{{ pendingPayload.quantity }}</dd></div>
         <div><dt>目的地</dt><dd>{{ pendingPayload.destination }}</dd></div>
+        <div><dt>备注</dt><dd>{{ pendingPayload.remark || '—' }}</dd></div>
         <div><dt>定位状态</dt><dd>{{ LOCATION_STATUS_LABELS[pendingPayload.locationStatus] }}</dd></div>
         <div>
           <dt>起始位置</dt>

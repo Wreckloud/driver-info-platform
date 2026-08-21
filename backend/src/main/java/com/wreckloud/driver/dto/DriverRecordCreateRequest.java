@@ -23,13 +23,18 @@ import java.util.UUID;
 @Schema(description = "司机登记创建参数")
 public record DriverRecordCreateRequest(
         @NotNull @Schema(description = "客户端生成的幂等令牌") UUID submissionToken,
+        @NotBlank @Size(max = 100)
+        @Pattern(regexp = "^[\\p{IsHan}A-Za-z0-9 ]+$", message = "项目只能包含汉字、英文字母、数字和空格")
+        @Schema(description = "业务项目") String project,
         @NotBlank @Size(max = 50) @Schema(description = "司机姓名") String driverName,
         @NotBlank @Pattern(regexp = "^1[3-9]\\d{9}$", message = "手机号格式不正确")
         @Schema(description = "大陆手机号") String phone,
         @NotBlank @Pattern(regexp = "^[\\p{IsHan}A-Za-z0-9-]{5,12}$", message = "车牌号格式不正确")
         @Schema(description = "车牌号") String licensePlate,
         @NotBlank @Size(max = 50) @Schema(description = "车型") String vehicleType,
+        @NotBlank @Size(max = 100) @Schema(description = "数量描述，例如 20件（冻品）") String quantity,
         @NotBlank @Size(max = 200) @Schema(description = "目的地") String destination,
+        @Size(max = 500) @Schema(description = "备注") String remark,
         @NotNull @Schema(description = "定位状态") LocationStatus locationStatus,
         @DecimalMin(value = "-90.0") @DecimalMax(value = "90.0") BigDecimal latitude,
         @DecimalMin(value = "-180.0") @DecimalMax(value = "180.0") BigDecimal longitude,

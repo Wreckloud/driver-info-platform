@@ -55,10 +55,30 @@ class DriverRecordCreateRequestValidationTest {
     @Test
     void shouldRejectInvalidPhoneAndLicensePlate() {
         DriverRecordCreateRequest request = new DriverRecordCreateRequest(
-                UUID.randomUUID(), "张三", "123", "A", "货车", "天津",
+                UUID.randomUUID(), "冷链A1", "张三", "123", "A", "货车", "20件（冻品）", "天津", null,
                 LocationStatus.NOT_REQUESTED, null, null, null, null);
 
         assertThat(validator.validate(request)).hasSize(2);
+    }
+
+    @Test
+    void shouldAcceptTextQuantityAndOptionalRemark() {
+        DriverRecordCreateRequest request = new DriverRecordCreateRequest(
+                UUID.randomUUID(), "冷链 A1", "张三", "13800138000", "京A12345", "厢式货车",
+                "20件（冻品）", "天津", "需要全程冷藏", LocationStatus.NOT_REQUESTED,
+                null, null, null, null);
+
+        assertThat(validator.validate(request)).isEmpty();
+    }
+
+    @Test
+    void shouldRejectUnsupportedProjectCharactersAndBlankQuantity() {
+        DriverRecordCreateRequest request = new DriverRecordCreateRequest(
+                UUID.randomUUID(), "冷链@A1", "张三", "13800138000", "京A12345", "厢式货车",
+                " ", "天津", null, LocationStatus.NOT_REQUESTED, null, null, null, null);
+
+        assertThat(validator.validate(request)).extracting("message")
+                .contains("项目只能包含汉字、英文字母、数字和空格", "不能为空");
     }
 
     private DriverRecordCreateRequest validRequest(LocationStatus status,
@@ -66,7 +86,7 @@ class DriverRecordCreateRequestValidationTest {
                                                     BigDecimal longitude,
                                                     BigDecimal accuracy,
                                                     Instant locatedAt) {
-        return new DriverRecordCreateRequest(UUID.randomUUID(), "张三", "13800138000", "京A12345",
-                "厢式货车", "天津", status, latitude, longitude, accuracy, locatedAt);
+        return new DriverRecordCreateRequest(UUID.randomUUID(), "冷链A1", "张三", "13800138000", "京A12345",
+                "厢式货车", "20件（冻品）", "天津", null, status, latitude, longitude, accuracy, locatedAt);
     }
 }

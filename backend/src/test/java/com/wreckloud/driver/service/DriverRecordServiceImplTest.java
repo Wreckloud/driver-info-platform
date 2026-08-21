@@ -4,13 +4,16 @@ import com.wreckloud.driver.domain.DriverRecord;
 import com.wreckloud.driver.domain.LocationStatus;
 import com.wreckloud.driver.dto.DriverRecordCreateRequest;
 import com.wreckloud.driver.dto.DriverRecordQuery;
+import com.wreckloud.driver.dto.DriverRecordUpdateRequest;
 import com.wreckloud.driver.mapper.DriverRecordMapper;
 import com.wreckloud.driver.service.impl.DriverRecordServiceImpl;
 import com.wreckloud.driver.vo.DriverRecordSummaryVO;
+import com.wreckloud.driver.vo.DriverRecordVO;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -61,11 +64,15 @@ class DriverRecordServiceImplTest {
         }).when(mapper).insert(any(DriverRecord.class));
 
         DriverRecordSummaryVO result = service.create(new DriverRecordCreateRequest(
-                token, " 张三 ", "13800138000", "京a12345", " 厢式货车 ", " 天津 ",
+                token, " 冷链A1 ", " 张三 ", "13800138000", "京a12345", " 厢式货车 ",
+                " 20件（冻品） ", " 天津 ", " 需要冷藏 ",
                 LocationStatus.NOT_REQUESTED, null, null, null, null));
 
         assertThat(result.id()).isEqualTo(10L);
+        assertThat(result.project()).isEqualTo("冷链A1");
         assertThat(result.licensePlate()).isEqualTo("京A12345");
+        assertThat(result.quantity()).isEqualTo("20件（冻品）");
+        assertThat(result.remark()).isEqualTo("需要冷藏");
         assertThat(result.createdAt()).isEqualTo(NOW);
         verify(geocodingService, never()).resolveAddress(any(), any());
     }
@@ -76,7 +83,8 @@ class DriverRecordServiceImplTest {
         when(mapper.findBySubmissionToken(existing.getSubmissionToken())).thenReturn(existing);
 
         DriverRecordSummaryVO result = service.create(new DriverRecordCreateRequest(
-                UUID.fromString(existing.getSubmissionToken()), "李四", "13900139000", "沪B88888", "货车", "苏州",
+                UUID.fromString(existing.getSubmissionToken()), "业务B2", "李四", "13900139000", "沪B88888", "货车",
+                "10箱", "苏州", null,
                 LocationStatus.NOT_REQUESTED, null, null, null, null));
 
         assertThat(result.id()).isEqualTo(existing.getId());
@@ -98,6 +106,29 @@ class DriverRecordServiceImplTest {
     }
 
     @Test
+    void shouldUpdateAllEditableBusinessFields() {
+        DriverRecord current = sampleRecord();
+        DriverRecord updated = sampleRecord();
+        updated.setProject("项目B2");
+        updated.setQuantity("10箱");
+        updated.setRemark(null);
+        when(mapper.findById(8L)).thenReturn(current, updated);
+        when(mapper.updateEditableFields(any())).thenReturn(1);
+
+        DriverRecordVO result = service.update(8L, new DriverRecordUpdateRequest(
+                " 项目B2 ", " 李四 ", "13900139000", "沪b88888", " 冷藏车 ",
+                " 10箱 ", " 苏州 ", " "), "admin");
+
+        ArgumentCaptor<DriverRecord> captor = ArgumentCaptor.forClass(DriverRecord.class);
+        verify(mapper).updateEditableFields(captor.capture());
+        assertThat(captor.getValue().getProject()).isEqualTo("项目B2");
+        assertThat(captor.getValue().getQuantity()).isEqualTo("10箱");
+        assertThat(captor.getValue().getRemark()).isNull();
+        assertThat(result.project()).isEqualTo("项目B2");
+        assertThat(result.quantity()).isEqualTo("10箱");
+    }
+
+    @Test
     void shouldExportChineseHeadersAndRecord() throws Exception {
         when(mapper.selectForExport(any())).thenReturn(List.of(sampleRecord()));
         ByteArrayOutputStream output = new ByteArrayOutputStream();
@@ -105,8 +136,13 @@ class DriverRecordServiceImplTest {
         service.export(new com.wreckloud.driver.dto.DriverRecordQuery(), output);
 
         try (XSSFWorkbook workbook = new XSSFWorkbook(new ByteArrayInputStream(output.toByteArray()))) {
-            assertThat(workbook.getSheetAt(0).getRow(0).getCell(1).getStringCellValue()).isEqualTo("司机姓名");
-            assertThat(workbook.getSheetAt(0).getRow(1).getCell(1).getStringCellValue()).isEqualTo("张三");
+            assertThat(workbook.getSheetAt(0).getRow(0).getCell(1).getStringCellValue()).isEqualTo("项目");
+            assertThat(workbook.getSheetAt(0).getRow(0).getCell(6).getStringCellValue()).isEqualTo("数量");
+            assertThat(workbook.getSheetAt(0).getRow(0).getCell(8).getStringCellValue()).isEqualTo("备注");
+            assertThat(workbook.getSheetAt(0).getRow(0).getCell(15).getStringCellValue()).isEqualTo("发车时间");
+            assertThat(workbook.getSheetAt(0).getRow(1).getCell(1).getStringCellValue()).isEqualTo("冷链A1");
+            assertThat(workbook.getSheetAt(0).getRow(1).getCell(6).getStringCellValue()).isEqualTo("20件（冻品）");
+            assertThat(workbook.getSheetAt(0).getRow(1).getCell(8).getStringCellValue()).isEqualTo("需要冷藏");
         }
     }
 
@@ -114,11 +150,14 @@ class DriverRecordServiceImplTest {
         DriverRecord record = new DriverRecord();
         record.setId(8L);
         record.setSubmissionToken("ec88439a-32f0-4750-bae8-60160f4bf174");
+        record.setProject("冷链A1");
         record.setDriverName("张三");
         record.setPhone("13800138000");
         record.setLicensePlate("京A12345");
         record.setVehicleType("厢式货车");
+        record.setQuantity("20件（冻品）");
         record.setDestination("天津");
+        record.setRemark("需要冷藏");
         record.setLocationStatus(LocationStatus.SUCCESS);
         record.setLatitude(new BigDecimal("39.9042000"));
         record.setLongitude(new BigDecimal("116.4074000"));

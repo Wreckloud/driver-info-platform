@@ -137,7 +137,7 @@ onUnmounted(() => {
     </div>
 
     <section class="filter-card">
-      <el-input v-model="query.keyword" clearable placeholder="搜索姓名、车牌或目的地" :prefix-icon="Search" @keyup.enter="search" />
+      <el-input v-model="query.keyword" clearable placeholder="搜索项目、姓名、车牌、目的地或备注" :prefix-icon="Search" @keyup.enter="search" />
       <el-date-picker v-model="dateRange" type="daterange" value-format="YYYY-MM-DD" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期" />
       <div class="filter-actions">
         <el-button type="primary" @click="search">查询</el-button>
@@ -147,21 +147,30 @@ onUnmounted(() => {
 
     <section class="records-card" v-loading="loading">
       <el-table class="desktop-records" :data="records" empty-text="暂无登记记录">
+        <el-table-column prop="project" label="项目" min-width="130" show-overflow-tooltip>
+          <template #default="scope">{{ scope.row.project || '—' }}</template>
+        </el-table-column>
         <el-table-column prop="driverName" label="姓名" min-width="90" />
         <el-table-column prop="phone" label="手机号" min-width="125" />
         <el-table-column prop="licensePlate" label="车牌号" min-width="110" />
         <el-table-column prop="vehicleType" label="车型" min-width="110" show-overflow-tooltip />
+        <el-table-column prop="quantity" label="数量" min-width="130" show-overflow-tooltip>
+          <template #default="scope">{{ scope.row.quantity || '—' }}</template>
+        </el-table-column>
+        <el-table-column prop="destination" label="目的地" min-width="160" show-overflow-tooltip />
+        <el-table-column prop="remark" label="备注" min-width="180" show-overflow-tooltip>
+          <template #default="scope">{{ scope.row.remark || '—' }}</template>
+        </el-table-column>
         <el-table-column prop="locationAddress" label="起始位置" min-width="210" show-overflow-tooltip>
           <template #default="scope">
             <span v-if="scope.row.locationStatus === 'SUCCESS'">{{ scope.row.locationAddress || '坐标已获取，地址解析失败' }}</span>
             <span v-else class="muted">{{ LOCATION_STATUS_LABELS[scope.row.locationStatus] }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="destination" label="目的地" min-width="160" show-overflow-tooltip />
         <el-table-column label="定位" width="100">
           <template #default="scope"><el-tag size="small" :type="locationStatusType(scope.row.locationStatus)">{{ LOCATION_STATUS_LABELS[scope.row.locationStatus] }}</el-tag></template>
         </el-table-column>
-        <el-table-column label="提交时间" min-width="185">
+        <el-table-column label="发车时间" min-width="185">
           <template #default="scope">
             <RecordTime :value="scope.row.createdAt" :now="currentTime" />
           </template>
@@ -181,12 +190,15 @@ onUnmounted(() => {
             <el-tag size="small" :type="locationStatusType(record.locationStatus)">{{ LOCATION_STATUS_LABELS[record.locationStatus] }}</el-tag>
           </div>
           <dl>
+            <div><dt>项目</dt><dd>{{ record.project || '—' }}</dd></div>
             <div><dt>手机号</dt><dd>{{ record.phone }}</dd></div>
             <div><dt>车型</dt><dd>{{ record.vehicleType }}</dd></div>
+            <div><dt>数量</dt><dd>{{ record.quantity || '—' }}</dd></div>
             <div><dt>目的地</dt><dd>{{ record.destination }}</dd></div>
+            <div><dt>备注</dt><dd>{{ record.remark || '—' }}</dd></div>
             <div><dt>起始位置</dt><dd>{{ record.locationStatus === 'SUCCESS' ? (record.locationAddress || '坐标已获取，地址解析失败') : LOCATION_STATUS_LABELS[record.locationStatus] }}</dd></div>
             <div>
-              <dt>提交时间</dt>
+              <dt>发车时间</dt>
               <dd><RecordTime :value="record.createdAt" :now="currentTime" /></dd>
             </div>
           </dl>

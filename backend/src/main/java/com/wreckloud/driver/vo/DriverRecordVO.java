@@ -15,11 +15,14 @@ import java.time.Instant;
 @Schema(description = "管理员登记记录")
 public record DriverRecordVO(
         Long id,
+        String project,
         String driverName,
         String phone,
         String licensePlate,
         String vehicleType,
+        String quantity,
         String destination,
+        String remark,
         BigDecimal latitude,
         BigDecimal longitude,
         String locationAddress,

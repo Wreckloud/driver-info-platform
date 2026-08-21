@@ -8,7 +8,7 @@ RUN mvn -q -DskipTests package
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 RUN addgroup -S app && adduser -S app -G app
-COPY --from=build /workspace/target/driver-info-platform-1.0.0.jar app.jar
+COPY --from=build /workspace/target/driver-info-platform-1.1.0.jar app.jar
 USER app
 EXPOSE 8080
 ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75.0", "-Duser.timezone=UTC", "-jar", "/app/app.jar"]

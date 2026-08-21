@@ -50,8 +50,8 @@ public class DriverRecordServiceImpl implements DriverRecordService {
     private static final ZoneId DISPLAY_ZONE = ZoneId.of("Asia/Shanghai");
     private static final DateTimeFormatter EXCEL_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private static final String[] EXCEL_HEADERS = {
-            "记录ID", "司机姓名", "手机号", "车牌号", "车型", "目的地", "定位状态",
-            "起始位置", "纬度", "经度", "定位精度（米）", "定位获取时间", "提交时间", "最后修改时间"
+            "记录ID", "项目", "司机姓名", "手机号", "车牌号", "车型", "数量", "目的地", "备注", "定位状态",
+            "起始位置", "纬度", "经度", "定位精度（米）", "定位获取时间", "发车时间", "最后修改时间"
     };
 
     private final DriverRecordMapper driverRecordMapper;
@@ -68,11 +68,14 @@ public class DriverRecordServiceImpl implements DriverRecordService {
 
         DriverRecord record = new DriverRecord();
         record.setSubmissionToken(submissionToken);
+        record.setProject(trim(request.project()));
         record.setDriverName(trim(request.driverName()));
         record.setPhone(trim(request.phone()));
         record.setLicensePlate(trim(request.licensePlate()).toUpperCase());
         record.setVehicleType(trim(request.vehicleType()));
+        record.setQuantity(trim(request.quantity()));
         record.setDestination(trim(request.destination()));
+        record.setRemark(trimToNull(request.remark()));
         record.setLocationStatus(request.locationStatus());
         if (request.locationStatus() == LocationStatus.SUCCESS) {
             record.setLatitude(request.latitude());
@@ -119,11 +122,14 @@ public class DriverRecordServiceImpl implements DriverRecordService {
         requireActiveRecord(id);
         DriverRecord record = new DriverRecord();
         record.setId(id);
+        record.setProject(trim(request.project()));
         record.setDriverName(trim(request.driverName()));
         record.setPhone(trim(request.phone()));
         record.setLicensePlate(trim(request.licensePlate()).toUpperCase());
         record.setVehicleType(trim(request.vehicleType()));
+        record.setQuantity(trim(request.quantity()));
         record.setDestination(trim(request.destination()));
+        record.setRemark(trimToNull(request.remark()));
         record.setUpdatedAt(LocalDateTime.ofInstant(clock.instant(), ZoneOffset.UTC));
         record.setUpdatedBy(operator);
         if (driverRecordMapper.updateEditableFields(record) == 0) {
@@ -152,7 +158,7 @@ public class DriverRecordServiceImpl implements DriverRecordService {
             for (int index = 0; index < records.size(); index++) {
                 writeRecord(sheet.createRow(index + 1), records.get(index));
             }
-            int[] widths = {12, 14, 16, 16, 14, 24, 14, 40, 16, 16, 18, 22, 22, 22};
+            int[] widths = {12, 18, 14, 16, 16, 14, 18, 24, 30, 14, 40, 16, 16, 18, 22, 22, 22};
             for (int i = 0; i < widths.length; i++) {
                 sheet.setColumnWidth(i, widths[i] * 256);
             }
@@ -193,15 +199,16 @@ public class DriverRecordServiceImpl implements DriverRecordService {
     }
 
     private DriverRecordSummaryVO toSummary(DriverRecord record) {
-        return new DriverRecordSummaryVO(record.getId(), record.getDriverName(), record.getLicensePlate(),
-                record.getDestination(), record.getLocationStatus(), record.getLatitude(), record.getLongitude(),
-                record.getLocationAddress(), record.getLocationAccuracy(), toInstant(record.getCreatedAt()));
+        return new DriverRecordSummaryVO(record.getId(), record.getProject(), record.getDriverName(),
+                record.getLicensePlate(), record.getQuantity(), record.getDestination(), record.getRemark(),
+                record.getLocationStatus(), record.getLatitude(), record.getLongitude(), record.getLocationAddress(),
+                record.getLocationAccuracy(), toInstant(record.getCreatedAt()));
     }
 
     private DriverRecordVO toVO(DriverRecord record) {
-        return new DriverRecordVO(record.getId(), record.getDriverName(), record.getPhone(),
-                record.getLicensePlate(), record.getVehicleType(), record.getDestination(),
-                record.getLatitude(), record.getLongitude(), record.getLocationAddress(),
+        return new DriverRecordVO(record.getId(), record.getProject(), record.getDriverName(), record.getPhone(),
+                record.getLicensePlate(), record.getVehicleType(), record.getQuantity(), record.getDestination(),
+                record.getRemark(), record.getLatitude(), record.getLongitude(), record.getLocationAddress(),
                 record.getLocationAccuracy(), record.getLocationStatus(), toInstant(record.getLocatedAt()),
                 toInstant(record.getCreatedAt()), toInstant(record.getUpdatedAt()), record.getUpdatedBy());
     }
@@ -212,6 +219,10 @@ public class DriverRecordServiceImpl implements DriverRecordService {
 
     private String trim(String value) {
         return value == null ? null : value.trim();
+    }
+
+    private String trimToNull(String value) {
+        return StringUtils.hasText(value) ? value.trim() : null;
     }
 
     private String escapeLike(String keyword) {
@@ -234,9 +245,9 @@ public class DriverRecordServiceImpl implements DriverRecordService {
 
     private void writeRecord(Row row, DriverRecord record) {
         String[] values = {
-                String.valueOf(record.getId()), record.getDriverName(), record.getPhone(),
-                record.getLicensePlate(), record.getVehicleType(), record.getDestination(),
-                record.getLocationStatus().getDescription(), nullToEmpty(record.getLocationAddress()),
+                String.valueOf(record.getId()), record.getProject(), record.getDriverName(), record.getPhone(),
+                record.getLicensePlate(), record.getVehicleType(), record.getQuantity(), record.getDestination(),
+                nullToEmpty(record.getRemark()), record.getLocationStatus().getDescription(), nullToEmpty(record.getLocationAddress()),
                 valueOf(record.getLatitude()), valueOf(record.getLongitude()), valueOf(record.getLocationAccuracy()),
                 formatTime(record.getLocatedAt()), formatTime(record.getCreatedAt()), formatTime(record.getUpdatedAt())
         };

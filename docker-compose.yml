@@ -21,7 +21,7 @@ services:
       retries: 12
 
   api:
-    image: driver-info-platform-api:${APP_VERSION:-1.0.0}
+    image: driver-info-platform-api:${APP_VERSION:-1.1.0}
     build:
       context: ./backend
     restart: unless-stopped
@@ -42,7 +42,7 @@ services:
         condition: service_healthy
 
   web:
-    image: driver-info-platform-web:${APP_VERSION:-1.0.0}
+    image: driver-info-platform-web:${APP_VERSION:-1.1.0}
     build:
       context: .
       dockerfile: frontend/Dockerfile

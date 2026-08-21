@@ -20,11 +20,14 @@ $token = [guid]::NewGuid().ToString()
 $marker = '本地测试' + $token.Substring(0, 8)
 $createBody = @{
     submissionToken = $token
+    project = '本地测试A1'
     driverName = $marker
     phone = '13800138000'
     licensePlate = '京A12345'
     vehicleType = '厢式货车'
+    quantity = '20件（冻品）'
     destination = '本地测试目的地'
+    remark = '自动化测试备注'
     locationStatus = 'NOT_REQUESTED'
 } | ConvertTo-Json
 
@@ -46,11 +49,14 @@ Assert-True ($records.data.total -ge 1) 'Administrator record query test failed.
 Assert-True ($null -ne $records.data.serverTime) 'Server time is missing from the record page.'
 
 $updatedBody = @{
+    project = '本地测试B2'
     driverName = $marker
     phone = '13800138000'
     licensePlate = '京A12345'
     vehicleType = '新能源厢式货车'
+    quantity = '10箱'
     destination = '修改后的测试目的地'
+    remark = '修改后的测试备注'
 } | ConvertTo-Json
 $csrf = Invoke-RestMethod -Method Get -Uri "$baseUrl/api/admin/auth/csrf" -WebSession $session
 $csrfHeaders = @{}
@@ -58,6 +64,8 @@ $csrfHeaders[$csrf.data.headerName] = $csrf.data.token
 $updated = Invoke-RestMethod -Method Put -Uri "$baseUrl/api/admin/records/$($created.data.id)" -WebSession $session `
     -Headers $csrfHeaders -ContentType 'application/json' -Body $updatedBody
 Assert-True ($updated.data.destination -eq '修改后的测试目的地') 'Record update test failed.'
+Assert-True ($updated.data.quantity -eq '10箱') 'Text quantity update test failed.'
+Assert-True ($updated.data.remark -eq '修改后的测试备注') 'Remark update test failed.'
 
 $runtimePath = Join-Path ([System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))) 'runtime'
 $exportPath = Join-Path $runtimePath 'local-test-export.xlsx'

@@ -59,7 +59,7 @@ if (Test-Path -LiteralPath $updateDir) {
 New-Item -ItemType Directory -Force -Path (Join-Path $updateDir 'artifacts\backend') | Out-Null
 New-Item -ItemType Directory -Force -Path (Join-Path $updateDir 'artifacts\frontend') | Out-Null
 
-Copy-Item -LiteralPath (Join-Path $projectDir 'backend\target\driver-info-platform-1.0.0.jar') `
+Copy-Item -LiteralPath (Join-Path $projectDir 'backend\target\driver-info-platform-1.1.0.jar') `
     -Destination (Join-Path $updateDir 'artifacts\backend\app.jar')
 Copy-Item -Path (Join-Path $projectDir 'frontend\dist\*') `
     -Destination (Join-Path $updateDir 'artifacts\frontend') -Recurse

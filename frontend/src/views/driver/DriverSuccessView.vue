@@ -35,12 +35,15 @@ function continueRegistering() {
       <h1>登记成功</h1>
       <p class="success-hint">本次出车信息已安全提交</p>
       <dl class="summary-list">
+        <div><dt>项目</dt><dd>{{ result.project }}</dd></div>
         <div><dt>姓名</dt><dd>{{ result.driverName }}</dd></div>
         <div><dt>车牌</dt><dd>{{ result.licensePlate }}</dd></div>
+        <div><dt>数量</dt><dd>{{ result.quantity }}</dd></div>
         <div><dt>目的地</dt><dd>{{ result.destination }}</dd></div>
+        <div v-if="result.remark"><dt>备注</dt><dd>{{ result.remark }}</dd></div>
         <div><dt>定位状态</dt><dd><el-tag :type="locationStatusType(result.locationStatus)">{{ locationLabel }}</el-tag></dd></div>
         <div><dt>起始位置</dt><dd>{{ locationAddress }}</dd></div>
-        <div><dt>提交时间</dt><dd>{{ formatTime(result.createdAt) }}</dd></div>
+        <div><dt>发车时间</dt><dd>{{ formatTime(result.createdAt) }}</dd></div>
       </dl>
       <el-button class="submit-button" type="primary" size="large" @click="continueRegistering">继续登记</el-button>
     </section>
