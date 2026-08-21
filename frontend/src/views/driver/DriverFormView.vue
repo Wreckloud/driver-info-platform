@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Camera, Close, Location, RefreshRight, Van } from '@element-plus/icons-vue'
@@ -25,6 +25,7 @@ const confirmVisible = ref(false)
 const pendingPayload = ref(null)
 const pendingLocationAddress = ref('')
 const photoInput = ref()
+const photoTrack = ref()
 const photoItems = ref([])
 const processingPhotos = ref(false)
 let locationRequestSequence = 0
@@ -142,7 +143,9 @@ async function capturePhoto(event) {
   processingPhotos.value = true
   try {
     const file = await compressPhoto(source)
-    photoItems.value.push({ file, url: URL.createObjectURL(file) })
+    photoItems.value.unshift({ file, url: URL.createObjectURL(file) })
+    await nextTick()
+    photoTrack.value?.scrollTo({ left: 0 })
   } catch (error) {
     ElMessage.error(error.message)
   } finally {
@@ -257,6 +260,27 @@ onUnmounted(() => {
         </el-form-item>
 
         <section :class="['evidence-panel', { 'is-retryable': locationRetryable }]">
+          <div class="photo-section">
+            <div class="photo-header-row">
+              <div class="photo-panel-heading">
+                <strong>出车照片</strong>
+                <span>至少 1 张，最多 9 张；拍摄后自动压缩</span>
+                <small>最新拍摄的照片显示在最前面，点击可放大</small>
+              </div>
+              <input ref="photoInput" class="visually-hidden" type="file" accept="image/*" capture="environment" @change="capturePhoto" />
+              <el-button :loading="processingPhotos" :disabled="photoItems.length >= 9" :icon="Camera" @click="openCamera">
+                {{ photoItems.length ? `继续拍照 ${photoItems.length}/9` : '拍摄照片' }}
+              </el-button>
+            </div>
+            <div v-if="photoItems.length" ref="photoTrack" class="photo-grid">
+              <div v-for="(photo, index) in photoItems" :key="photo.url" class="photo-item">
+                <el-image :src="photo.url" fit="cover" :preview-src-list="photoPreviewUrls" :initial-index="index" preview-teleported />
+                <button type="button" aria-label="删除照片" @click="removePhoto(index)"><el-icon><Close /></el-icon></button>
+              </div>
+            </div>
+            <p v-else class="photo-empty">尚未拍摄照片</p>
+          </div>
+
           <div class="location-row">
             <div
               class="location-copy"
@@ -272,24 +296,6 @@ onUnmounted(() => {
               <span v-if="locationRetryable" class="location-retry-hint"><el-icon><RefreshRight /></el-icon>点击卡片重新获取</span>
               <small>定位失败或拒绝授权仍可提交。</small>
             </div>
-            <input ref="photoInput" class="visually-hidden" type="file" accept="image/*" capture="environment" @change="capturePhoto" />
-            <el-button :loading="processingPhotos" :disabled="photoItems.length >= 9" :icon="Camera" @click="openCamera">
-              {{ photoItems.length ? `继续拍照 ${photoItems.length}/9` : '拍摄照片' }}
-            </el-button>
-          </div>
-
-          <div class="photo-section">
-            <div class="photo-panel-heading">
-              <div><strong>出车照片</strong><span>至少 1 张，最多 9 张；拍摄后自动压缩</span></div>
-              <small>点击照片可放大</small>
-            </div>
-            <div v-if="photoItems.length" class="photo-grid">
-              <div v-for="(photo, index) in photoItems" :key="photo.url" class="photo-item">
-                <el-image :src="photo.url" fit="cover" :preview-src-list="photoPreviewUrls" :initial-index="index" preview-teleported />
-                <button type="button" aria-label="删除照片" @click="removePhoto(index)"><el-icon><Close /></el-icon></button>
-              </div>
-            </div>
-            <p v-else class="photo-empty">尚未拍摄照片</p>
           </div>
         </section>
 
