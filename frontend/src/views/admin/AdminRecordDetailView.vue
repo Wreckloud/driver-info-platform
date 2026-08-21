@@ -109,6 +109,20 @@ onMounted(load)
         </el-form>
       </section>
 
+      <section class="detail-card readonly-card">
+        <div class="section-heading"><div><p class="eyebrow">LOCATION & TIME</p><h2>定位与时间</h2></div><el-tag :type="locationStatusType(record.locationStatus)">{{ LOCATION_STATUS_LABELS[record.locationStatus] }}</el-tag></div>
+        <dl class="detail-list">
+          <div><dt>起始位置</dt><dd>{{ record.locationStatus === 'SUCCESS' ? (record.locationAddress || '坐标已获取，文字地址解析失败') : LOCATION_STATUS_LABELS[record.locationStatus] }}</dd></div>
+          <div><dt>纬度</dt><dd>{{ record.latitude ?? '—' }}</dd></div>
+          <div><dt>经度</dt><dd>{{ record.longitude ?? '—' }}</dd></div>
+          <div><dt>定位精度</dt><dd>{{ record.locationAccuracy == null ? '—' : `${record.locationAccuracy} 米` }}</dd></div>
+          <div><dt>定位获取时间</dt><dd>{{ formatTime(record.locatedAt) }}</dd></div>
+          <div><dt>发车时间</dt><dd>{{ formatTime(record.createdAt) }}</dd></div>
+          <div><dt>最后修改时间</dt><dd>{{ formatTime(record.updatedAt) }}</dd></div>
+          <div><dt>最后修改人</dt><dd>{{ record.updatedBy || '—' }}</dd></div>
+        </dl>
+      </section>
+
       <section class="detail-card photo-detail-card">
         <div class="section-heading"><div><p class="eyebrow">PHOTOS</p><h2>出车照片</h2></div><span class="record-id">{{ record.photoCount }} 张</span></div>
         <div v-if="record.photos?.length" class="admin-photo-grid">
@@ -123,20 +137,6 @@ onMounted(load)
           />
         </div>
         <el-empty v-else :image-size="72" description="暂无照片" />
-      </section>
-
-      <section class="detail-card readonly-card">
-        <div class="section-heading"><div><p class="eyebrow">LOCATION & TIME</p><h2>定位与时间</h2></div><el-tag :type="locationStatusType(record.locationStatus)">{{ LOCATION_STATUS_LABELS[record.locationStatus] }}</el-tag></div>
-        <dl class="detail-list">
-          <div><dt>起始位置</dt><dd>{{ record.locationStatus === 'SUCCESS' ? (record.locationAddress || '坐标已获取，文字地址解析失败') : LOCATION_STATUS_LABELS[record.locationStatus] }}</dd></div>
-          <div><dt>纬度</dt><dd>{{ record.latitude ?? '—' }}</dd></div>
-          <div><dt>经度</dt><dd>{{ record.longitude ?? '—' }}</dd></div>
-          <div><dt>定位精度</dt><dd>{{ record.locationAccuracy == null ? '—' : `${record.locationAccuracy} 米` }}</dd></div>
-          <div><dt>定位获取时间</dt><dd>{{ formatTime(record.locatedAt) }}</dd></div>
-          <div><dt>发车时间</dt><dd>{{ formatTime(record.createdAt) }}</dd></div>
-          <div><dt>最后修改时间</dt><dd>{{ formatTime(record.updatedAt) }}</dd></div>
-          <div><dt>最后修改人</dt><dd>{{ record.updatedBy || '—' }}</dd></div>
-        </dl>
       </section>
     </div>
   </main>
