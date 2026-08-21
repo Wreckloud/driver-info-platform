@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { CircleCheckFilled } from '@element-plus/icons-vue'
-import { LOCATION_STATUS_LABELS, locationStatusType } from '@/constants/location'
+import { LOCATION_STATUS_LABELS } from '@/constants/location'
 import { formatTime } from '@/utils/time'
 
 const SUCCESS_KEY = 'driver-submit-success'
@@ -43,7 +43,6 @@ function continueRegistering() {
         <div class="summary-item--wide"><dt>数量</dt><dd>{{ result.quantity }}</dd></div>
         <div class="summary-item--wide"><dt>目的地</dt><dd>{{ result.destination }}</dd></div>
         <div v-if="result.remark" class="summary-item--wide"><dt>备注</dt><dd>{{ result.remark }}</dd></div>
-        <div class="summary-item--wide"><dt>定位状态</dt><dd><el-tag :type="locationStatusType(result.locationStatus)">{{ locationLabel }}</el-tag></dd></div>
         <div class="summary-item--wide"><dt>起始位置</dt><dd>{{ locationAddress }}</dd></div>
         <div class="summary-item--wide"><dt>照片</dt><dd>{{ result.photoCount }} 张</dd></div>
         <div class="summary-item--wide"><dt>发车时间</dt><dd>{{ formatTime(result.createdAt) }}</dd></div>

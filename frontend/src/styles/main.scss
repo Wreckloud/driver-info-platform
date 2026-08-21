@@ -124,7 +124,7 @@ a { color: inherit; text-decoration: none; }
 .text-action:hover, .back-link:hover { color: var(--primary); }
 
 .success-card { max-width: 520px; text-align: center; }
-.success-icon { margin-bottom: 12px; color: #24a56e; font-size: 70px; }
+.success-icon { margin-bottom: 8px; color: #24a56e; font-size: 62px; }
 .summary-list { margin: 28px 0; text-align: left; border-top: 1px solid var(--line); }
 .summary-list div { display: grid; grid-template-columns: 90px 1fr; padding: 15px 0; border-bottom: 1px solid var(--line); }
 .summary-list dt { color: var(--muted); }
@@ -239,6 +239,16 @@ a { color: inherit; text-decoration: none; }
 @media (max-width: 560px) {
   .driver-page { padding: 0; place-items: stretch; }
   .driver-card { min-height: 100vh; padding: 22px 16px; border-radius: 0; box-shadow: none; }
+  .success-page { min-height: 100dvh; place-items: center stretch; }
+  .success-page .success-card { min-height: 100dvh; padding-top: 14px; padding-bottom: 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .success-card .success-icon { margin-bottom: 4px; font-size: 50px; }
+  .success-card h1 { font-size: 26px; }
+  .success-card .success-hint { margin-top: 4px; font-size: 13px; }
+  .success-card .summary-list { width: 100%; margin: 14px 0; }
+  .success-card .summary-list--compact div { padding: 6px 0; }
+  .success-card .summary-list--compact dt { margin-bottom: 1px; }
+  .success-card .summary-list--compact dd { font-size: 13px; line-height: 1.3; }
+  .success-card .submit-button { min-height: 44px; }
   .driver-header { gap: 12px; margin-bottom: 22px; }
   .driver-header .brand-mark { width: 48px; height: 48px; flex-basis: 48px; border-radius: 15px; font-size: 24px; }
   .driver-header h1 { font-size: 24px; }
