@@ -95,3 +95,5 @@ npm run build
 ```
 
 详细接口见 [API 说明](docs/api.md)，真机验收项见 [验收清单](docs/acceptance.md)。
+
+如果准备继续维护和学习项目，请从 [代码阅读与维护指南](docs/code-reading-guide.md) 开始，按司机提交、成功页、管理员系统、部署的顺序理解完整调用链。
