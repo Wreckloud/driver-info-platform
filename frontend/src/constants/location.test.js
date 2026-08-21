@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { LOCATION_STATUS_LABELS, locationDisplayText, locationStatusType } from './location'
+import { LOCATION_STATUS_LABELS, locationCanRetry, locationDisplayText, locationStatusType } from './location'
 
 describe('location status presentation', () => {
   it('contains all backend statuses', () => {
@@ -12,6 +12,14 @@ describe('location status presentation', () => {
     expect(locationStatusType('SUCCESS')).toBe('success')
     expect(locationStatusType('NOT_REQUESTED')).toBe('info')
     expect(locationStatusType('FAILED')).toBe('warning')
+  })
+
+  it('only allows retry after a failed location attempt', () => {
+    expect(locationCanRetry('DENIED')).toBe(true)
+    expect(locationCanRetry('FAILED')).toBe(true)
+    expect(locationCanRetry('TIMEOUT')).toBe(true)
+    expect(locationCanRetry('SUCCESS')).toBe(false)
+    expect(locationCanRetry('NOT_REQUESTED')).toBe(false)
   })
 
   it('prefers the resolved address and does not expose coordinates', () => {

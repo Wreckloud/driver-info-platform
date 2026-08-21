@@ -2,9 +2,9 @@
 import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Camera, Close, Location, Van } from '@element-plus/icons-vue'
+import { Camera, Close, Location, RefreshRight, Van } from '@element-plus/icons-vue'
 import { createDriverRecord, resolveLocationAddress } from '@/api/driver'
-import { LOCATION_STATUS_LABELS, locationDisplayText } from '@/constants/location'
+import { LOCATION_STATUS_LABELS, locationCanRetry, locationDisplayText } from '@/constants/location'
 import {
   clearSavedDriverInfo,
   createSubmissionToken,
@@ -68,6 +68,7 @@ const locationText = computed(() => {
   if (resolvingLocation.value) return '正在解析位置…'
   return locationDisplayText(form.locationStatus, locationAddress.value)
 })
+const locationRetryable = computed(() => !locating.value && !resolvingLocation.value && locationCanRetry(form.locationStatus))
 const photoPreviewUrls = computed(() => photoItems.value.map((item) => item.url))
 
 function clearLocation() {
@@ -125,29 +126,25 @@ function locate() {
   )
 }
 
-function openPhotoPicker() {
+function retryLocation() {
+  if (locationRetryable.value) locate()
+}
+
+function openCamera() {
   if (photoItems.value.length >= 9 || processingPhotos.value) return
   photoInput.value?.click()
 }
 
-async function selectPhotos(event) {
-  const selected = Array.from(event.target.files || [])
+async function capturePhoto(event) {
+  const source = event.target.files?.[0]
   event.target.value = ''
-  if (!selected.length) return
-  const remaining = 9 - photoItems.value.length
-  if (selected.length > remaining) {
-    ElMessage.warning(`最多上传 9 张照片，本次只处理前 ${remaining} 张`)
-  }
+  if (!source || photoItems.value.length >= 9) return
   processingPhotos.value = true
   try {
-    for (const source of selected.slice(0, remaining)) {
-      try {
-        const file = await compressPhoto(source)
-        photoItems.value.push({ file, url: URL.createObjectURL(file) })
-      } catch (error) {
-        ElMessage.error(error.message)
-      }
-    }
+    const file = await compressPhoto(source)
+    photoItems.value.push({ file, url: URL.createObjectURL(file) })
+  } catch (error) {
+    ElMessage.error(error.message)
   } finally {
     processingPhotos.value = false
   }
@@ -172,7 +169,7 @@ async function requestConfirmation() {
   const valid = await formRef.value.validate().catch(() => false)
   if (!valid || submitting.value) return
   if (!photoItems.value.length) {
-    ElMessage.warning('请至少拍摄或选择一张照片')
+    ElMessage.warning('请至少拍摄一张照片')
     return
   }
   if (processingPhotos.value) {
@@ -259,22 +256,31 @@ onUnmounted(() => {
           <el-input v-model.trim="form.remark" type="textarea" :rows="3" maxlength="500" show-word-limit placeholder="可填写本次出车的补充说明" />
         </el-form-item>
 
-        <section class="location-panel">
-          <div class="location-copy">
+        <section :class="['location-panel', { 'is-retryable': locationRetryable }]">
+          <div
+            class="location-copy"
+            :role="locationRetryable ? 'button' : undefined"
+            :tabindex="locationRetryable ? 0 : undefined"
+            :aria-label="locationRetryable ? '重新获取起始位置' : undefined"
+            @click="retryLocation"
+            @keydown.enter="retryLocation"
+            @keydown.space.prevent="retryLocation"
+          >
             <div class="location-title"><el-icon><Location /></el-icon><span>起始位置</span></div>
             <p :class="['location-state', locationTone]">{{ locationText }}</p>
+            <span v-if="locationRetryable" class="location-retry-hint"><el-icon><RefreshRight /></el-icon>点击卡片重新获取</span>
             <small>位置信息仅用于本次出车登记；定位失败或拒绝授权仍可提交。</small>
           </div>
-          <input ref="photoInput" class="visually-hidden" type="file" accept="image/*" capture="environment" multiple @change="selectPhotos" />
-          <el-button :loading="processingPhotos" :disabled="photoItems.length >= 9" :icon="Camera" @click="openPhotoPicker">
-            {{ photoItems.length ? `继续拍照 ${photoItems.length}/9` : '拍照上传' }}
+          <input ref="photoInput" class="visually-hidden" type="file" accept="image/*" capture="environment" @change="capturePhoto" />
+          <el-button :loading="processingPhotos" :disabled="photoItems.length >= 9" :icon="Camera" @click="openCamera">
+            {{ photoItems.length ? `继续拍照 ${photoItems.length}/9` : '拍摄照片' }}
           </el-button>
         </section>
 
         <section class="photo-panel">
           <div class="photo-panel-heading">
             <div><strong>出车照片</strong><span>至少 1 张，最多 9 张</span></div>
-            <small>照片会自动压缩，点击缩略图可放大查看</small>
+            <small>照片拍摄后会自动压缩，点击缩略图可放大查看</small>
           </div>
           <div v-if="photoItems.length" class="photo-grid">
             <div v-for="(photo, index) in photoItems" :key="photo.url" class="photo-item">
