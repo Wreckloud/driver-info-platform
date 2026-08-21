@@ -126,6 +126,11 @@ a { color: inherit; text-decoration: none; }
 .summary-list div { display: grid; grid-template-columns: 90px 1fr; padding: 15px 0; border-bottom: 1px solid var(--line); }
 .summary-list dt { color: var(--muted); }
 .summary-list dd { margin: 0; font-weight: 700; text-align: right; overflow-wrap: anywhere; }
+.summary-list--compact { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 16px; }
+.summary-list--compact div { min-width: 0; display: block; padding: 10px 0; }
+.summary-list--compact .summary-item--wide { grid-column: 1 / -1; }
+.summary-list--compact dt { margin-bottom: 3px; font-size: 12px; }
+.summary-list--compact dd { font-size: 14px; line-height: 1.4; text-align: left; }
 .confirm-hint { margin: 0 0 8px; color: var(--muted); font-size: 13px; line-height: 1.4; }
 .confirm-list { margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 16px; border-top: 1px solid var(--line); }
 .confirm-list div { min-width: 0; padding: 6px 0; border-bottom: 1px solid var(--line); }
@@ -208,13 +213,18 @@ a { color: inherit; text-decoration: none; }
   .mobile-records { display: block; padding-top: 10px; }
   .record-item { padding: 18px 2px; border-bottom: 1px solid var(--line); }
   .record-item-head { display: flex; align-items: center; justify-content: space-between; }
-  .record-item-head div { display: flex; align-items: baseline; gap: 9px; }
-  .record-item-head strong { font-size: 18px; }
+  .record-item-head div { min-width: 0; display: flex; align-items: baseline; gap: 9px; }
+  .record-item-head strong { font-size: 18px; overflow-wrap: anywhere; }
   .record-item-head span { color: var(--primary); font-weight: 750; }
   .record-item dl { margin: 14px 0; }
-  .record-item dl div { display: grid; grid-template-columns: 76px 1fr; margin: 8px 0; }
+  .record-common-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 14px; }
+  .record-common-grid div { min-width: 0; }
+  .record-common-grid dt { font-size: 12px; }
+  .record-common-grid dd { color: #203f3c; font-weight: 700; }
+  .record-detail-list div { display: grid; grid-template-columns: 76px 1fr; margin: 8px 0; }
   .record-item dt { color: var(--muted); }
   .record-item dd { margin: 0; overflow-wrap: anywhere; }
+  .record-item .record-common-grid dd { margin-top: 3px; }
   .record-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .record-actions--readonly { grid-template-columns: 1fr; }
   .record-actions .el-button { margin: 0; }

@@ -34,17 +34,17 @@ function continueRegistering() {
       <p class="eyebrow">SUBMITTED</p>
       <h1>登记成功</h1>
       <p class="success-hint">本次出车信息已安全提交</p>
-      <dl class="summary-list">
-        <div><dt>项目</dt><dd>{{ result.project }}</dd></div>
+      <dl class="summary-list summary-list--compact">
+        <div class="summary-item--wide"><dt>项目</dt><dd>{{ result.project }}</dd></div>
         <div><dt>姓名</dt><dd>{{ result.driverName }}</dd></div>
         <div><dt>车牌</dt><dd>{{ result.licensePlate }}</dd></div>
         <div><dt>数量</dt><dd>{{ result.quantity }}</dd></div>
-        <div><dt>目的地</dt><dd>{{ result.destination }}</dd></div>
-        <div v-if="result.remark"><dt>备注</dt><dd>{{ result.remark }}</dd></div>
         <div><dt>照片</dt><dd>{{ result.photoCount }} 张</dd></div>
-        <div><dt>定位状态</dt><dd><el-tag :type="locationStatusType(result.locationStatus)">{{ locationLabel }}</el-tag></dd></div>
-        <div><dt>起始位置</dt><dd>{{ locationAddress }}</dd></div>
-        <div><dt>发车时间</dt><dd>{{ formatTime(result.createdAt) }}</dd></div>
+        <div class="summary-item--wide"><dt>目的地</dt><dd>{{ result.destination }}</dd></div>
+        <div v-if="result.remark" class="summary-item--wide"><dt>备注</dt><dd>{{ result.remark }}</dd></div>
+        <div class="summary-item--wide"><dt>定位状态</dt><dd><el-tag :type="locationStatusType(result.locationStatus)">{{ locationLabel }}</el-tag></dd></div>
+        <div class="summary-item--wide"><dt>起始位置</dt><dd>{{ locationAddress }}</dd></div>
+        <div class="summary-item--wide"><dt>发车时间</dt><dd>{{ formatTime(result.createdAt) }}</dd></div>
       </dl>
       <el-button class="submit-button" type="primary" size="large" @click="continueRegistering">继续登记</el-button>
     </section>

@@ -191,13 +191,16 @@ onUnmounted(() => {
       <div class="mobile-records">
         <article v-for="record in records" :key="record.id" class="record-item">
           <div class="record-item-head">
-            <div><strong>{{ record.driverName }}</strong><span>{{ record.licensePlate }}</span></div>
+            <div><strong>{{ record.project || '—' }}</strong></div>
             <el-tag size="small" :type="locationStatusType(record.locationStatus)">{{ LOCATION_STATUS_LABELS[record.locationStatus] }}</el-tag>
           </div>
-          <dl>
-            <div><dt>项目</dt><dd>{{ record.project || '—' }}</dd></div>
+          <dl class="record-common-grid">
+            <div><dt>姓名</dt><dd>{{ record.driverName }}</dd></div>
             <div><dt>手机号</dt><dd>{{ record.phone }}</dd></div>
+            <div><dt>车牌号</dt><dd>{{ record.licensePlate }}</dd></div>
             <div><dt>车型</dt><dd>{{ record.vehicleType }}</dd></div>
+          </dl>
+          <dl class="record-detail-list">
             <div><dt>数量</dt><dd>{{ record.quantity || '—' }}</dd></div>
             <div><dt>目的地</dt><dd>{{ record.destination }}</dd></div>
             <div><dt>备注</dt><dd>{{ record.remark || '—' }}</dd></div>
