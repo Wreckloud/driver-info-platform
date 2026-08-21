@@ -80,5 +80,8 @@ finally {
     Pop-Location
 }
 
+Remove-Item -LiteralPath $updateDir -Recurse -Force
+
 Write-Host "Update archive created: $archiveFile"
+Write-Host 'Temporary expanded artifacts have been removed; only the update archive is kept.'
 Write-Host 'This update archive does not contain .env or other deployment secrets.'

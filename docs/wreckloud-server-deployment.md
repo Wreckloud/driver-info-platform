@@ -65,6 +65,37 @@ chmod +x deploy/server/*.sh
 
 它不会修改 `/opt/lycanclaw`，也不会重启 `lycan-*` 容器。
 
+### 后续更新：只上传一个增量包
+
+首次部署完成后，不需要再生成或上传含 `.env` 的完整包。本地运行：
+
+```powershell
+cd D:\Portfolio\project\DriverInfoPlatform
+.\deploy\server\package-update.ps1
+Get-FileHash .\release\driver-info-platform-1.2.0-update.tar.gz -Algorithm SHA256
+scp .\release\driver-info-platform-1.2.0-update.tar.gz wreckloud@106.53.186.78:/home/wreckloud/
+```
+
+`release` 顶层只需保留这一个最新增量包。脚本会在打包后自动删除展开的中间目录；增量包不包含 `.env`、数据库数据、照片或其他密钥。
+
+服务器执行下面这一段普通命令，不需要 `sudo`：
+
+```sh
+cd /home/wreckloud/apps/driver-info-platform-1.0.0
+./deploy/server/backup.sh
+tar -xzf /home/wreckloud/driver-info-platform-1.2.0-update.tar.gz -C .
+chmod +x deploy/server/*.sh
+./deploy/server/deploy.sh
+```
+
+脚本只重建并更新 `driver_info_platform-api-1` 与 `driver_info_platform-web-1`，不会管理或重启 `lycan-*` 容器。更新后检查：
+
+```sh
+docker compose --env-file .env ps
+curl -sS -o /dev/null -w 'driver=%{http_code}\n' https://driver.wreckloud.com/driver
+curl -sS -o /dev/null -w 'api=%{http_code}\n' https://driver.wreckloud.com/api/admin/auth/csrf
+```
+
 如果管理员密码需要修改，使用交互式脚本。脚本会隐藏输入、生成 BCrypt 摘要并重建新系统容器：
 
 ```sh

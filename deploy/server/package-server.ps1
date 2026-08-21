@@ -150,5 +150,8 @@ finally {
     Pop-Location
 }
 
+Remove-Item -LiteralPath $bundleDir -Recurse -Force
+
 Write-Host "Release archive created: $archiveFile"
+Write-Host 'Temporary expanded artifacts have been removed; only the release archive is kept.'
 Write-Host 'The archive contains .env secrets. Keep it private and delete obsolete copies.'
