@@ -311,26 +311,27 @@ onUnmounted(() => {
       title="请再次确认登记信息"
       width="520px"
       class="driver-confirm-dialog"
+      align-center
       :close-on-click-modal="!submitting"
       :close-on-press-escape="!submitting"
       :show-close="!submitting"
     >
-      <p class="confirm-hint">提交后将生成一条新的出车记录，请确认以下信息无误。</p>
+      <p class="confirm-hint">请确认信息，提交后将生成新记录。</p>
       <dl v-if="pendingPayload" class="confirm-list">
-        <div><dt>项目</dt><dd>{{ pendingPayload.project }}</dd></div>
+        <div class="confirm-item--wide"><dt>项目</dt><dd>{{ pendingPayload.project }}</dd></div>
         <div><dt>姓名</dt><dd>{{ pendingPayload.driverName }}</dd></div>
         <div><dt>手机号</dt><dd>{{ pendingPayload.phone }}</dd></div>
         <div><dt>车牌号</dt><dd>{{ pendingPayload.licensePlate }}</dd></div>
         <div><dt>车型</dt><dd>{{ pendingPayload.vehicleType }}</dd></div>
         <div><dt>数量</dt><dd>{{ pendingPayload.quantity }}</dd></div>
-        <div><dt>目的地</dt><dd>{{ pendingPayload.destination }}</dd></div>
-        <div><dt>备注</dt><dd>{{ pendingPayload.remark || '—' }}</dd></div>
-        <div><dt>定位状态</dt><dd>{{ LOCATION_STATUS_LABELS[pendingPayload.locationStatus] }}</dd></div>
-        <div>
+        <div><dt>照片</dt><dd>共 {{ photoItems.length }} 张</dd></div>
+        <div class="confirm-item--wide"><dt>目的地</dt><dd>{{ pendingPayload.destination }}</dd></div>
+        <div class="confirm-item--wide"><dt>备注</dt><dd>{{ pendingPayload.remark || '—' }}</dd></div>
+        <div class="confirm-item--wide"><dt>定位状态</dt><dd>{{ LOCATION_STATUS_LABELS[pendingPayload.locationStatus] }}</dd></div>
+        <div class="confirm-item--wide">
           <dt>起始位置</dt>
           <dd>{{ locationDisplayText(pendingPayload.locationStatus, pendingLocationAddress) }}</dd>
         </div>
-        <div><dt>照片</dt><dd>共 {{ photoItems.length }} 张</dd></div>
       </dl>
       <div v-if="photoItems.length" class="confirm-photo-grid">
         <el-image
