@@ -207,9 +207,10 @@ public class DriverRecordServiceImpl implements DriverRecordService {
 
     private DriverRecordSummaryVO toSummary(DriverRecord record) {
         return new DriverRecordSummaryVO(record.getId(), record.getProject(), record.getDriverName(),
-                record.getLicensePlate(), record.getQuantity(), record.getDestination(), record.getRemark(),
-                record.getLocationStatus(), record.getLatitude(), record.getLongitude(), record.getLocationAddress(),
-                record.getLocationAccuracy(), record.getPhotoCount(), toInstant(record.getCreatedAt()));
+                record.getPhone(), record.getLicensePlate(), record.getVehicleType(), record.getQuantity(),
+                record.getDestination(), record.getRemark(), record.getLocationStatus(), record.getLatitude(),
+                record.getLongitude(), record.getLocationAddress(), record.getLocationAccuracy(),
+                record.getPhotoCount(), toInstant(record.getCreatedAt()));
     }
 
     private DriverRecordVO toVO(DriverRecord record, boolean includePhotos) {

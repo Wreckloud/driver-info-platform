@@ -77,6 +77,8 @@ class DriverRecordServiceImplTest {
         assertThat(result.id()).isEqualTo(10L);
         assertThat(result.project()).isEqualTo("冷链A1");
         assertThat(result.licensePlate()).isEqualTo("京A12345");
+        assertThat(result.phone()).isEqualTo("13800138000");
+        assertThat(result.vehicleType()).isEqualTo("厢式货车");
         assertThat(result.quantity()).isEqualTo("20件（冻品）");
         assertThat(result.remark()).isEqualTo("需要冷藏");
         assertThat(result.photoCount()).isEqualTo(1);

@@ -323,8 +323,7 @@ onUnmounted(() => {
         <div><dt>手机号</dt><dd>{{ pendingPayload.phone }}</dd></div>
         <div><dt>车牌号</dt><dd>{{ pendingPayload.licensePlate }}</dd></div>
         <div><dt>车型</dt><dd>{{ pendingPayload.vehicleType }}</dd></div>
-        <div><dt>数量</dt><dd>{{ pendingPayload.quantity }}</dd></div>
-        <div><dt>照片</dt><dd>共 {{ photoItems.length }} 张</dd></div>
+        <div class="confirm-item--wide"><dt>数量</dt><dd>{{ pendingPayload.quantity }}</dd></div>
         <div class="confirm-item--wide"><dt>目的地</dt><dd>{{ pendingPayload.destination }}</dd></div>
         <div class="confirm-item--wide"><dt>备注</dt><dd>{{ pendingPayload.remark || '—' }}</dd></div>
         <div class="confirm-item--wide"><dt>定位状态</dt><dd>{{ LOCATION_STATUS_LABELS[pendingPayload.locationStatus] }}</dd></div>
@@ -333,16 +332,19 @@ onUnmounted(() => {
           <dd>{{ locationDisplayText(pendingPayload.locationStatus, pendingLocationAddress) }}</dd>
         </div>
       </dl>
-      <div v-if="photoItems.length" class="confirm-photo-grid">
-        <el-image
-          v-for="(photo, index) in photoItems"
-          :key="photo.url"
-          :src="photo.url"
-          fit="cover"
-          :preview-src-list="photoPreviewUrls"
-          :initial-index="index"
-          preview-teleported
-        />
+      <div v-if="photoItems.length" class="confirm-photo-section">
+        <div class="confirm-photo-summary"><span>照片</span><strong>共 {{ photoItems.length }} 张</strong></div>
+        <div class="confirm-photo-grid">
+          <el-image
+            v-for="(photo, index) in photoItems"
+            :key="photo.url"
+            :src="photo.url"
+            fit="cover"
+            :preview-src-list="photoPreviewUrls"
+            :initial-index="index"
+            preview-teleported
+          />
+        </div>
       </div>
       <template #footer>
         <el-button :disabled="submitting" @click="confirmVisible = false">返回修改</el-button>

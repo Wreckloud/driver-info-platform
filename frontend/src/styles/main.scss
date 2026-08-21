@@ -111,7 +111,10 @@ a { color: inherit; text-decoration: none; }
 .photo-item .el-image, .admin-photo-grid .el-image { width: 100%; height: 100%; cursor: zoom-in; }
 .photo-item button { position: absolute; top: 6px; right: 6px; width: 28px; height: 28px; padding: 0; display: grid; place-items: center; border: 0; border-radius: 50%; color: white; background: rgba(16, 36, 34, 0.72); cursor: pointer; }
 .photo-empty { height: calc(var(--photo-thumb-size) + 10px); margin: 0; padding: 10px 12px; display: grid; place-items: center; border-radius: 10px; color: var(--muted); background: #edf3f0; font-size: 13px; text-align: center; }
-.confirm-photo-grid { --photo-thumb-size: 56px; margin-top: 4px; }
+.confirm-photo-section { margin-top: 4px; }
+.confirm-photo-summary { display: flex; align-items: center; justify-content: space-between; color: var(--muted); font-size: 12px; line-height: 1.3; }
+.confirm-photo-summary strong { color: #203f3c; font-size: 13px; }
+.confirm-photo-grid { --photo-thumb-size: 48px; margin-top: 2px; }
 .confirm-photo-grid .el-image { width: var(--photo-thumb-size); height: var(--photo-thumb-size); flex: 0 0 var(--photo-thumb-size); border-radius: 10px; background: #e6eeeb; cursor: zoom-in; scroll-snap-align: start; }
 .admin-photo-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 .admin-photo-grid .el-image { aspect-ratio: 1; border-radius: 10px; background: #e6eeeb; }
@@ -133,7 +136,7 @@ a { color: inherit; text-decoration: none; }
 .summary-list--compact dd { font-size: 14px; line-height: 1.4; text-align: left; }
 .confirm-hint { margin: 0 0 8px; color: var(--muted); font-size: 13px; line-height: 1.4; }
 .confirm-list { margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 16px; border-top: 1px solid var(--line); }
-.confirm-list div { min-width: 0; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.confirm-list div { min-width: 0; padding: 5px 0; border-bottom: 1px solid var(--line); }
 .confirm-list .confirm-item--wide { grid-column: 1 / -1; }
 .confirm-list dt { margin-bottom: 2px; color: var(--muted); font-size: 12px; }
 .confirm-list dd { margin: 0; color: #203f3c; font-size: 14px; font-weight: 700; line-height: 1.35; overflow-wrap: anywhere; }

@@ -43,7 +43,7 @@
 `project` 和 `quantity` 为必填文本，`remark` 为可选文本。`SUCCESS` 必须提供四个定位字段；`DENIED`、`FAILED`、`TIMEOUT`、`NOT_REQUESTED` 必须将定位字段省略或设为 `null`。文字地址和发车时间（响应字段仍为 `createdAt`）由后端生成。
 
 创建成功摘要会返回 `latitude`、`longitude`、`locationAddress` 和 `locationAccuracy`，供司机成功页显示本次起始位置。地址解析失败时 `locationAddress` 为空，但坐标和精度仍会返回。
-创建成功摘要还会返回 `photoCount`。照片不加水印，定位与发车时间仍由独立字段保存。
+创建成功摘要还会返回 `phone`、`vehicleType` 和 `photoCount`，供成功页完整展示常用车辆信息。照片不加水印，定位与发车时间仍由独立字段保存。
 
 ## 管理员认证
 
