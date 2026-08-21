@@ -264,8 +264,7 @@ onUnmounted(() => {
             <div class="photo-header-row">
               <div class="photo-panel-heading">
                 <strong>出车照片</strong>
-                <span>至少 1 张，最多 9 张；拍摄后自动压缩</span>
-                <small>最新拍摄的照片显示在最前面，点击可放大</small>
+                <span>至少 1 张，最多 9 张</span>
               </div>
               <input ref="photoInput" class="visually-hidden" type="file" accept="image/*" capture="environment" @change="capturePhoto" />
               <el-button :loading="processingPhotos" :disabled="photoItems.length >= 9" :icon="Camera" @click="openCamera">

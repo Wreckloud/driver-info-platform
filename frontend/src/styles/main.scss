@@ -104,8 +104,8 @@ a { color: inherit; text-decoration: none; }
 .photo-section, .photo-panel-heading { min-width: 0; }
 .photo-header-row { min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 10px; }
 .photo-header-row .el-button { flex: 0 0 auto; min-width: 118px; }
-.photo-panel-heading strong, .photo-panel-heading span, .photo-panel-heading small { display: block; }
-.photo-panel-heading span, .photo-panel-heading small { margin-top: 3px; color: var(--muted); font-size: 12px; }
+.photo-panel-heading strong, .photo-panel-heading span { display: block; }
+.photo-panel-heading span { margin-top: 3px; color: var(--muted); font-size: 12px; }
 .photo-grid, .confirm-photo-grid { width: 100%; max-width: 100%; height: calc(var(--photo-thumb-size) + 10px); display: flex; gap: 10px; overflow-x: auto; overflow-y: hidden; padding-bottom: 6px; scroll-snap-type: x proximity; scrollbar-width: thin; }
 .photo-item { position: relative; width: var(--photo-thumb-size); height: var(--photo-thumb-size); flex: 0 0 var(--photo-thumb-size); overflow: hidden; border-radius: 12px; background: #e6eeeb; scroll-snap-align: start; }
 .photo-item .el-image, .admin-photo-grid .el-image { width: 100%; height: 100%; cursor: zoom-in; }
