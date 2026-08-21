@@ -67,6 +67,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(
                                 "/api/driver/records",
+                                "/api/driver/record-photos/**",
                                 "/api/driver/locations/address",
                                 "/api/admin/auth/csrf",
                                 "/api/admin/auth/login",

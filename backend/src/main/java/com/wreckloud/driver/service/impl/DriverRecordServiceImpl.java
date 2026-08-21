@@ -9,9 +9,11 @@ import com.wreckloud.driver.dto.DriverRecordUpdateRequest;
 import com.wreckloud.driver.dto.RecordSearchCriteria;
 import com.wreckloud.driver.exception.BusinessException;
 import com.wreckloud.driver.mapper.DriverRecordMapper;
-import com.wreckloud.driver.service.DriverRecordService;
 import com.wreckloud.driver.service.DriverRecordPhotoService;
+import com.wreckloud.driver.service.DriverRecordService;
 import com.wreckloud.driver.service.ReverseGeocodingService;
+import com.wreckloud.driver.vo.DriverRecordPhotoSummaryVO;
+import com.wreckloud.driver.vo.DriverRecordPhotoVO;
 import com.wreckloud.driver.vo.DriverRecordSummaryVO;
 import com.wreckloud.driver.vo.DriverRecordVO;
 import lombok.RequiredArgsConstructor;
@@ -68,7 +70,7 @@ public class DriverRecordServiceImpl implements DriverRecordService {
         String submissionToken = request.submissionToken().toString();
         DriverRecord existing = driverRecordMapper.findBySubmissionToken(submissionToken);
         if (existing != null) {
-            return toSummary(existing);
+            return toSummary(existing, photoService.list(existing.getId()));
         }
 
         DriverRecord record = new DriverRecord();
@@ -98,14 +100,14 @@ public class DriverRecordServiceImpl implements DriverRecordService {
         } catch (DuplicateKeyException exception) {
             DriverRecord duplicated = driverRecordMapper.findBySubmissionToken(submissionToken);
             if (duplicated != null) {
-                return toSummary(duplicated);
+                return toSummary(duplicated, photoService.list(duplicated.getId()));
             }
             throw exception;
         }
-        photoService.save(record.getId(), photos, now);
+        List<DriverRecordPhotoVO> savedPhotos = photoService.save(record.getId(), photos, now);
         record.setPhotoCount(photos.size());
         log.info("Driver record created, recordId={}, locationStatus={}", record.getId(), record.getLocationStatus());
-        return toSummary(record);
+        return toSummary(record, savedPhotos);
     }
 
     @Override
@@ -205,12 +207,14 @@ public class DriverRecordServiceImpl implements DriverRecordService {
         return new BusinessException(HttpStatus.NOT_FOUND, "登记记录不存在或已删除");
     }
 
-    private DriverRecordSummaryVO toSummary(DriverRecord record) {
+    private DriverRecordSummaryVO toSummary(DriverRecord record, List<DriverRecordPhotoVO> photos) {
         return new DriverRecordSummaryVO(record.getId(), record.getProject(), record.getDriverName(),
                 record.getPhone(), record.getLicensePlate(), record.getVehicleType(), record.getQuantity(),
                 record.getDestination(), record.getRemark(), record.getLocationStatus(), record.getLatitude(),
                 record.getLongitude(), record.getLocationAddress(), record.getLocationAccuracy(),
-                record.getPhotoCount(), toInstant(record.getCreatedAt()));
+                record.getPhotoCount(), photos.stream()
+                        .map(photo -> new DriverRecordPhotoSummaryVO(photo.id(), photo.width(), photo.height()))
+                        .toList(), toInstant(record.getCreatedAt()));
     }
 
     private DriverRecordVO toVO(DriverRecord record, boolean includePhotos) {

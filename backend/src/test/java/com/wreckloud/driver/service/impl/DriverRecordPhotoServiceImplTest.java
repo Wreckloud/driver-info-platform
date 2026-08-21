@@ -13,6 +13,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -24,6 +25,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * 司机登记照片业务测试。
@@ -78,6 +80,33 @@ class DriverRecordPhotoServiceImplTest {
         assertThatThrownBy(() -> service.save(7L,
                 Collections.nCopies(10, new MockMultipartFile("photos", new byte[]{1})), LocalDateTime.now()))
                 .isInstanceOf(BusinessException.class).hasMessage("最多上传 9 张照片");
+    }
+
+    @Test
+    void shouldLoadPhotoForMatchingSubmissionToken() throws Exception {
+        DriverRecordPhoto photo = new DriverRecordPhoto();
+        photo.setId(12L);
+        photo.setDriverRecordId(7L);
+        photo.setStorageName("trip.jpg");
+        photo.setContentType("image/jpeg");
+        byte[] content = jpeg(800, 600);
+        photo.setFileSize(content.length);
+        Files.createDirectories(temporaryDirectory.resolve("7"));
+        Files.write(temporaryDirectory.resolve("7").resolve("trip.jpg"), content);
+        when(mapper.findActiveByIdAndSubmissionToken(12L, "submission-token")).thenReturn(photo);
+
+        var result = service.loadForSubmission(12L, "submission-token");
+
+        assertThat(result.contentType()).isEqualTo("image/jpeg");
+        assertThat(result.contentLength()).isEqualTo(content.length);
+        assertThat(result.resource().exists()).isTrue();
+    }
+
+    @Test
+    void shouldRejectPhotoWhenSubmissionTokenDoesNotMatch() {
+        assertThatThrownBy(() -> service.loadForSubmission(12L, "wrong-token"))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage("照片不存在或登记记录已删除");
     }
 
     private byte[] jpeg(int width, int height) throws Exception {

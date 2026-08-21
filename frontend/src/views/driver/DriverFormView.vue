@@ -201,7 +201,7 @@ async function confirmSubmit() {
     const payload = pendingPayload.value
     const result = await createDriverRecord(payload, photoItems.value.map((item) => item.file))
     saveDriverInfo(payload)
-    sessionStorage.setItem(SUCCESS_KEY, JSON.stringify(result))
+    sessionStorage.setItem(SUCCESS_KEY, JSON.stringify({ ...result, submissionToken: payload.submissionToken }))
     confirmVisible.value = false
     await router.replace('/driver/success')
   } catch (error) {

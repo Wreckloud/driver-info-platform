@@ -82,6 +82,16 @@ public class DriverRecordPhotoServiceImpl implements DriverRecordPhotoService {
     @Override
     public PhotoContent load(Long photoId) {
         DriverRecordPhoto photo = photoMapper.findActiveById(photoId);
+        return loadContent(photo);
+    }
+
+    @Override
+    public PhotoContent loadForSubmission(Long photoId, String submissionToken) {
+        DriverRecordPhoto photo = photoMapper.findActiveByIdAndSubmissionToken(photoId, submissionToken);
+        return loadContent(photo);
+    }
+
+    private PhotoContent loadContent(DriverRecordPhoto photo) {
         if (photo == null) {
             throw new BusinessException(HttpStatus.NOT_FOUND, "照片不存在或登记记录已删除");
         }

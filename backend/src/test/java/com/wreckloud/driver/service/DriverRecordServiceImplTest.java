@@ -7,6 +7,7 @@ import com.wreckloud.driver.dto.DriverRecordQuery;
 import com.wreckloud.driver.dto.DriverRecordUpdateRequest;
 import com.wreckloud.driver.mapper.DriverRecordMapper;
 import com.wreckloud.driver.service.impl.DriverRecordServiceImpl;
+import com.wreckloud.driver.vo.DriverRecordPhotoVO;
 import com.wreckloud.driver.vo.DriverRecordSummaryVO;
 import com.wreckloud.driver.vo.DriverRecordVO;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -68,6 +69,8 @@ class DriverRecordServiceImplTest {
             invocation.<DriverRecord>getArgument(0).setId(10L);
             return 1;
         }).when(mapper).insert(any(DriverRecord.class));
+        when(photoService.save(any(), any(), any()))
+                .thenReturn(List.of(new DriverRecordPhotoVO(12L, "/api/admin/record-photos/12", 800, 600)));
 
         DriverRecordSummaryVO result = service.create(new DriverRecordCreateRequest(
                 token, " 冷链A1 ", " 张三 ", "13800138000", "京a12345", " 厢式货车 ",
@@ -82,6 +85,11 @@ class DriverRecordServiceImplTest {
         assertThat(result.quantity()).isEqualTo("20件（冻品）");
         assertThat(result.remark()).isEqualTo("需要冷藏");
         assertThat(result.photoCount()).isEqualTo(1);
+        assertThat(result.photos()).singleElement().satisfies(photo -> {
+            assertThat(photo.id()).isEqualTo(12L);
+            assertThat(photo.width()).isEqualTo(800);
+            assertThat(photo.height()).isEqualTo(600);
+        });
         assertThat(result.createdAt()).isEqualTo(NOW);
         verify(geocodingService, never()).resolveAddress(any(), any());
     }
@@ -90,6 +98,8 @@ class DriverRecordServiceImplTest {
     void shouldReturnExistingRecordForRepeatedSubmissionToken() {
         DriverRecord existing = sampleRecord();
         when(mapper.findBySubmissionToken(existing.getSubmissionToken())).thenReturn(existing);
+        when(photoService.list(existing.getId()))
+                .thenReturn(List.of(new DriverRecordPhotoVO(12L, "/api/admin/record-photos/12", 800, 600)));
 
         DriverRecordSummaryVO result = service.create(new DriverRecordCreateRequest(
                 UUID.fromString(existing.getSubmissionToken()), "业务B2", "李四", "13900139000", "沪B88888", "货车",
@@ -101,6 +111,7 @@ class DriverRecordServiceImplTest {
         assertThat(result.latitude()).isEqualByComparingTo("39.9042000");
         assertThat(result.longitude()).isEqualByComparingTo("116.4074000");
         assertThat(result.locationAccuracy()).isEqualByComparingTo("15.50");
+        assertThat(result.photos()).singleElement().extracting(photo -> photo.id()).isEqualTo(12L);
         verify(mapper, never()).insert(any());
     }
 

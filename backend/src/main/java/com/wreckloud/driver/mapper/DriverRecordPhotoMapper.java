@@ -1,6 +1,7 @@
 package com.wreckloud.driver.mapper;
 
 import com.wreckloud.driver.domain.DriverRecordPhoto;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -17,4 +18,7 @@ public interface DriverRecordPhotoMapper {
     List<DriverRecordPhoto> findByRecordId(Long recordId);
 
     DriverRecordPhoto findActiveById(Long id);
+
+    DriverRecordPhoto findActiveByIdAndSubmissionToken(@Param("id") Long id,
+                                                       @Param("submissionToken") String submissionToken);
 }

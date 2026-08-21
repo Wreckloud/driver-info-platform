@@ -21,6 +21,8 @@ public interface DriverRecordPhotoService {
 
     PhotoContent load(Long photoId);
 
+    PhotoContent loadForSubmission(Long photoId, String submissionToken);
+
     record PhotoContent(Resource resource, String contentType, long contentLength) {
     }
 }

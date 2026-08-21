@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 
 /**
  * 司机提交成功摘要。
@@ -29,5 +30,6 @@ public record DriverRecordSummaryVO(
         String locationAddress,
         BigDecimal locationAccuracy,
         int photoCount,
+        List<DriverRecordPhotoSummaryVO> photos,
         Instant createdAt) {
 }
