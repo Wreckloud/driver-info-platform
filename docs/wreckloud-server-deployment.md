@@ -82,11 +82,15 @@ scp .\release\driver-info-platform-1.2.0-update.tar.gz wreckloud@106.53.186.78:/
 
 ```sh
 cd /home/wreckloud/apps/driver-info-platform-1.0.0
+tar -xzf /home/wreckloud/driver-info-platform-1.2.0-update.tar.gz -C . deploy/server/backup.sh
+chmod +x deploy/server/backup.sh
 ./deploy/server/backup.sh
 tar -xzf /home/wreckloud/driver-info-platform-1.2.0-update.tar.gz -C .
 chmod +x deploy/server/*.sh
 ./deploy/server/deploy.sh
 ```
+
+第一条解压命令只更新备份脚本。备份使用 `--no-tablespaces`，不要求给业务数据库账号授予全局 `PROCESS` 权限；脚本会验证 SQL 完整结束标记、gzip 和照片归档，任何一步失败都会停止，不会继续显示“备份成功”。
 
 脚本只重建并更新 `driver_info_platform-api-1` 与 `driver_info_platform-web-1`，不会管理或重启 `lycan-*` 容器。更新后检查：
 

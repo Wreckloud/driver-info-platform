@@ -15,13 +15,20 @@ cd "$project_dir"
 trap 'rm -f "$sql_file" "$compressed_file" "$photo_backup_tmp"' EXIT
 
 docker compose exec -T mysql sh -c \
-  'exec mysqldump --single-transaction --quick --routines --triggers -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE"' \
+  'exec mysqldump --no-tablespaces --single-transaction --quick --routines --triggers -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE"' \
   > "$sql_file"
 gzip -c "$sql_file" > "$compressed_file"
 mv "$compressed_file" "$backup_file"
+gzip -t "$backup_file"
+if ! gzip -dc "$backup_file" | tail -n 20 | grep -q '^-- Dump completed on '; then
+  rm -f "$backup_file"
+  echo "Database backup is incomplete" >&2
+  exit 1
+fi
 
 docker compose exec -T api tar -czf - -C /app/uploads . > "$photo_backup_tmp"
 mv "$photo_backup_tmp" "$photo_backup_file"
+tar -tzf "$photo_backup_file" >/dev/null
 
 find "$backup_dir" -type f -name 'driver_info_*.sql.gz' -mtime +30 -delete
 find "$backup_dir" -type f -name 'driver_photos_*.tar.gz' -mtime +30 -delete
