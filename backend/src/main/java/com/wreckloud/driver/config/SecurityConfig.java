@@ -5,6 +5,7 @@ import com.wreckloud.driver.common.ApiResult;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -36,10 +37,17 @@ public class SecurityConfig {
 
     @Bean
     public UserDetailsService userDetailsService(AppProperties properties) {
-        return new InMemoryUserDetailsManager(User.withUsername(properties.admin().username())
+        InMemoryUserDetailsManager manager = new InMemoryUserDetailsManager(User.withUsername(properties.admin().username())
                 .password(properties.admin().passwordBcrypt())
                 .roles("ADMIN")
                 .build());
+        if (properties.viewer().enabled()) {
+            manager.createUser(User.withUsername(properties.viewer().username().trim())
+                    .password(properties.viewer().passwordBcrypt())
+                    .roles("VIEWER")
+                    .build());
+        }
+        return manager;
     }
 
     @Bean
@@ -69,6 +77,10 @@ public class SecurityConfig {
                                 "/webjars/**",
                                 "/actuator/health")
                         .permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/admin/auth/me", "/api/admin/auth/logout").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/admin/**").hasAnyRole("ADMIN", "VIEWER")
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().permitAll())
                 .exceptionHandling(exceptions -> exceptions

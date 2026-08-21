@@ -72,7 +72,7 @@ public class AdminAuthController {
             }
             securityContextRepository.saveContext(context, request, response);
             loginAttemptService.recordSuccess(clientAddress);
-            return ApiResult.success(new AdminSessionVO(authentication.getName()));
+            return ApiResult.success(toSession(authentication));
         } catch (BadCredentialsException exception) {
             loginAttemptService.recordFailure(clientAddress);
             throw new BusinessException(HttpStatus.UNAUTHORIZED, "账号或密码错误");
@@ -91,6 +91,12 @@ public class AdminAuthController {
     @Operation(summary = "获取当前管理员")
     @GetMapping("/me")
     public ApiResult<AdminSessionVO> me(Authentication authentication) {
-        return ApiResult.success(new AdminSessionVO(authentication.getName()));
+        return ApiResult.success(toSession(authentication));
+    }
+
+    private AdminSessionVO toSession(Authentication authentication) {
+        boolean canManage = authentication.getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
+        return new AdminSessionVO(authentication.getName(), canManage);
     }
 }

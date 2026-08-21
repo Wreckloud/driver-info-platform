@@ -35,4 +35,5 @@ public class DriverRecord {
     private boolean deleted;
     private LocalDateTime deletedAt;
     private String deletedBy;
+    private int photoCount;
 }

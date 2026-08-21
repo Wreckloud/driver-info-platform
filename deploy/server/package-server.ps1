@@ -43,14 +43,18 @@ function Invoke-CheckedCommand {
 $appVersion = Get-DotEnvValue -Name 'APP_VERSION'
 $publicBaseUrl = Get-DotEnvValue -Name 'PUBLIC_BASE_URL'
 $adminPasswordBcrypt = Get-DotEnvValue -Name 'ADMIN_PASSWORD_BCRYPT'
+$viewerPasswordBcrypt = Get-DotEnvValue -Name 'VIEWER_PASSWORD_BCRYPT'
 if ([string]::IsNullOrWhiteSpace($appVersion)) {
-    $appVersion = '1.1.0'
+    $appVersion = '1.2.0'
 }
 if ($publicBaseUrl -notmatch '^https://[^/\s]+$') {
     throw 'PUBLIC_BASE_URL must be a complete HTTPS origin without a trailing path.'
 }
 if ($adminPasswordBcrypt -notmatch '^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}$') {
     throw 'ADMIN_PASSWORD_BCRYPT must contain a BCrypt hash, not the administrator plaintext password.'
+}
+if ($viewerPasswordBcrypt -notmatch '^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}$') {
+    throw 'VIEWER_PASSWORD_BCRYPT must contain a BCrypt hash, not the viewer plaintext password.'
 }
 
 Get-Command mvn -ErrorAction Stop | Out-Null
@@ -104,7 +108,7 @@ New-Item -ItemType Directory -Force -Path (Join-Path $bundleDir 'artifacts\front
 New-Item -ItemType Directory -Force -Path (Join-Path $bundleDir 'artifacts\qrcode') | Out-Null
 New-Item -ItemType Directory -Force -Path (Join-Path $bundleDir 'deploy') | Out-Null
 
-Copy-Item -LiteralPath (Join-Path $projectDir 'backend\target\driver-info-platform-1.1.0.jar') `
+Copy-Item -LiteralPath (Join-Path $projectDir 'backend\target\driver-info-platform-1.2.0.jar') `
     -Destination (Join-Path $bundleDir 'artifacts\backend\app.jar')
 Copy-Item -Path (Join-Path $projectDir 'frontend\dist\*') `
     -Destination (Join-Path $bundleDir 'artifacts\frontend') -Recurse
@@ -115,7 +119,7 @@ Copy-Item -LiteralPath (Join-Path $projectDir 'deploy\server') `
 Copy-Item -LiteralPath (Join-Path $projectDir 'docker-compose.server.yml') `
     -Destination (Join-Path $bundleDir 'docker-compose.yml')
 
-$secretNames = @('MYSQL_PASSWORD', 'MYSQL_ROOT_PASSWORD', 'ADMIN_PASSWORD_BCRYPT', 'TENCENT_MAP_KEY')
+$secretNames = @('MYSQL_PASSWORD', 'MYSQL_ROOT_PASSWORD', 'ADMIN_PASSWORD_BCRYPT', 'VIEWER_PASSWORD_BCRYPT', 'TENCENT_MAP_KEY')
 $deploymentEnv = foreach ($line in Get-Content -LiteralPath $envFile) {
     if ($line -notmatch '^([A-Za-z_][A-Za-z0-9_]*)=(.*)$') {
         $line

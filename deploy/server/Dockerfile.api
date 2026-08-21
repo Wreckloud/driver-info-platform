@@ -1,7 +1,8 @@
 FROM eclipse-temurin:17-jre-alpine
 
 WORKDIR /app
-RUN addgroup -S app && adduser -S app -G app
+RUN addgroup -S app && adduser -S app -G app \
+    && mkdir -p /app/uploads && chown -R app:app /app/uploads
 COPY artifacts/backend/app.jar /app/app.jar
 
 USER app

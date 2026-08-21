@@ -3,9 +3,10 @@ set -eu
 
 project_dir=$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)
 env_file="$project_dir/.env"
+viewer_username=HYHTLLWLYXGS
 
 fail() {
-  echo "Administrator password update failed: $1" >&2
+  echo "Read-only account update failed: $1" >&2
   exit 1
 }
 
@@ -26,11 +27,11 @@ restore_tty() {
 }
 trap restore_tty EXIT HUP INT TERM
 
-printf 'New administrator password (at least 12 characters): '
+printf 'Password for read-only account %s (at least 12 characters): ' "$viewer_username"
 stty -echo
 IFS= read -r password
 stty echo
-printf '\nConfirm new administrator password: '
+printf '\nConfirm password: '
 stty -echo
 IFS= read -r password_confirmation
 stty echo
@@ -62,13 +63,16 @@ esac
 temporary_env=$(mktemp "$project_dir/.env.XXXXXX")
 trap 'rm -f "$temporary_env"' EXIT HUP INT TERM
 escaped_hash=$(printf '%s' "$password_hash" | sed 's/[&|]/\\&/g')
-if grep -q '^ADMIN_PASSWORD_BCRYPT=' "$env_file"; then
-  sed "s|^ADMIN_PASSWORD_BCRYPT=.*$|ADMIN_PASSWORD_BCRYPT='$escaped_hash'|" \
-    "$env_file" > "$temporary_env"
-else
-  cp "$env_file" "$temporary_env"
-  printf "\nADMIN_PASSWORD_BCRYPT='%s'\n" "$password_hash" >> "$temporary_env"
-fi
+awk -v username="$viewer_username" -v hash="$escaped_hash" '
+  BEGIN { username_written = 0; hash_written = 0 }
+  /^VIEWER_USERNAME=/ { print "VIEWER_USERNAME=" username; username_written = 1; next }
+  /^VIEWER_PASSWORD_BCRYPT=/ { print "VIEWER_PASSWORD_BCRYPT=\047" hash "\047"; hash_written = 1; next }
+  { print }
+  END {
+    if (!username_written) print "VIEWER_USERNAME=" username
+    if (!hash_written) print "VIEWER_PASSWORD_BCRYPT=\047" hash "\047"
+  }
+' "$env_file" > "$temporary_env"
 chmod 600 "$temporary_env"
 mv "$temporary_env" "$env_file"
 trap - EXIT HUP INT TERM
@@ -78,4 +82,4 @@ cd "$project_dir"
 docker compose --env-file "$env_file" config --quiet
 docker compose --env-file "$env_file" up -d --force-recreate api web
 docker compose --env-file "$env_file" ps
-echo 'Administrator password hash updated. Wait for the API health check to become healthy.'
+echo "Read-only account $viewer_username configured. Wait for the API health check to become healthy."

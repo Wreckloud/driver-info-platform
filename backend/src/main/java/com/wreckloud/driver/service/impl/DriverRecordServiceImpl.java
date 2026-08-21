@@ -10,6 +10,7 @@ import com.wreckloud.driver.dto.RecordSearchCriteria;
 import com.wreckloud.driver.exception.BusinessException;
 import com.wreckloud.driver.mapper.DriverRecordMapper;
 import com.wreckloud.driver.service.DriverRecordService;
+import com.wreckloud.driver.service.DriverRecordPhotoService;
 import com.wreckloud.driver.service.ReverseGeocodingService;
 import com.wreckloud.driver.vo.DriverRecordSummaryVO;
 import com.wreckloud.driver.vo.DriverRecordVO;
@@ -24,7 +25,9 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 
 import java.io.IOException;
@@ -50,16 +53,18 @@ public class DriverRecordServiceImpl implements DriverRecordService {
     private static final ZoneId DISPLAY_ZONE = ZoneId.of("Asia/Shanghai");
     private static final DateTimeFormatter EXCEL_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private static final String[] EXCEL_HEADERS = {
-            "记录ID", "项目", "司机姓名", "手机号", "车牌号", "车型", "数量", "目的地", "备注", "定位状态",
+            "记录ID", "项目", "司机姓名", "手机号", "车牌号", "车型", "数量", "目的地", "备注", "照片数量", "定位状态",
             "起始位置", "纬度", "经度", "定位精度（米）", "定位获取时间", "发车时间", "最后修改时间"
     };
 
     private final DriverRecordMapper driverRecordMapper;
     private final ReverseGeocodingService reverseGeocodingService;
+    private final DriverRecordPhotoService photoService;
     private final Clock clock;
 
     @Override
-    public DriverRecordSummaryVO create(DriverRecordCreateRequest request) {
+    @Transactional
+    public DriverRecordSummaryVO create(DriverRecordCreateRequest request, List<MultipartFile> photos) {
         String submissionToken = request.submissionToken().toString();
         DriverRecord existing = driverRecordMapper.findBySubmissionToken(submissionToken);
         if (existing != null) {
@@ -97,6 +102,8 @@ public class DriverRecordServiceImpl implements DriverRecordService {
             }
             throw exception;
         }
+        photoService.save(record.getId(), photos, now);
+        record.setPhotoCount(photos.size());
         log.info("Driver record created, recordId={}, locationStatus={}", record.getId(), record.getLocationStatus());
         return toSummary(record);
     }
@@ -108,13 +115,13 @@ public class DriverRecordServiceImpl implements DriverRecordService {
         long total = driverRecordMapper.count(criteria);
         List<DriverRecordVO> items = total == 0
                 ? List.of()
-                : driverRecordMapper.selectPage(criteria).stream().map(this::toVO).toList();
+                : driverRecordMapper.selectPage(criteria).stream().map(record -> toVO(record, false)).toList();
         return new PageResult<>(total, query.getPage(), query.getPageSize(), items, clock.instant());
     }
 
     @Override
     public DriverRecordVO getById(Long id) {
-        return toVO(requireActiveRecord(id));
+        return toVO(requireActiveRecord(id), true);
     }
 
     @Override
@@ -136,7 +143,7 @@ public class DriverRecordServiceImpl implements DriverRecordService {
             throw notFound();
         }
         log.info("Driver record updated, recordId={}, operator={}", id, operator);
-        return toVO(requireActiveRecord(id));
+        return toVO(requireActiveRecord(id), true);
     }
 
     @Override
@@ -158,7 +165,7 @@ public class DriverRecordServiceImpl implements DriverRecordService {
             for (int index = 0; index < records.size(); index++) {
                 writeRecord(sheet.createRow(index + 1), records.get(index));
             }
-            int[] widths = {12, 18, 14, 16, 16, 14, 18, 24, 30, 14, 40, 16, 16, 18, 22, 22, 22};
+            int[] widths = {12, 18, 14, 16, 16, 14, 18, 24, 30, 12, 14, 40, 16, 16, 18, 22, 22, 22};
             for (int i = 0; i < widths.length; i++) {
                 sheet.setColumnWidth(i, widths[i] * 256);
             }
@@ -202,15 +209,16 @@ public class DriverRecordServiceImpl implements DriverRecordService {
         return new DriverRecordSummaryVO(record.getId(), record.getProject(), record.getDriverName(),
                 record.getLicensePlate(), record.getQuantity(), record.getDestination(), record.getRemark(),
                 record.getLocationStatus(), record.getLatitude(), record.getLongitude(), record.getLocationAddress(),
-                record.getLocationAccuracy(), toInstant(record.getCreatedAt()));
+                record.getLocationAccuracy(), record.getPhotoCount(), toInstant(record.getCreatedAt()));
     }
 
-    private DriverRecordVO toVO(DriverRecord record) {
+    private DriverRecordVO toVO(DriverRecord record, boolean includePhotos) {
         return new DriverRecordVO(record.getId(), record.getProject(), record.getDriverName(), record.getPhone(),
                 record.getLicensePlate(), record.getVehicleType(), record.getQuantity(), record.getDestination(),
                 record.getRemark(), record.getLatitude(), record.getLongitude(), record.getLocationAddress(),
                 record.getLocationAccuracy(), record.getLocationStatus(), toInstant(record.getLocatedAt()),
-                toInstant(record.getCreatedAt()), toInstant(record.getUpdatedAt()), record.getUpdatedBy());
+                toInstant(record.getCreatedAt()), toInstant(record.getUpdatedAt()), record.getUpdatedBy(),
+                record.getPhotoCount(), includePhotos ? photoService.list(record.getId()) : List.of());
     }
 
     private Instant toInstant(LocalDateTime value) {
@@ -247,7 +255,8 @@ public class DriverRecordServiceImpl implements DriverRecordService {
         String[] values = {
                 String.valueOf(record.getId()), record.getProject(), record.getDriverName(), record.getPhone(),
                 record.getLicensePlate(), record.getVehicleType(), record.getQuantity(), record.getDestination(),
-                nullToEmpty(record.getRemark()), record.getLocationStatus().getDescription(), nullToEmpty(record.getLocationAddress()),
+                nullToEmpty(record.getRemark()), String.valueOf(record.getPhotoCount()),
+                record.getLocationStatus().getDescription(), nullToEmpty(record.getLocationAddress()),
                 valueOf(record.getLatitude()), valueOf(record.getLongitude()), valueOf(record.getLocationAccuracy()),
                 formatTime(record.getLocatedAt()), formatTime(record.getCreatedAt()), formatTime(record.getUpdatedAt())
         };

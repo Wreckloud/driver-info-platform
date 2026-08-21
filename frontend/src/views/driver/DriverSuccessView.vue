@@ -41,6 +41,7 @@ function continueRegistering() {
         <div><dt>数量</dt><dd>{{ result.quantity }}</dd></div>
         <div><dt>目的地</dt><dd>{{ result.destination }}</dd></div>
         <div v-if="result.remark"><dt>备注</dt><dd>{{ result.remark }}</dd></div>
+        <div><dt>照片</dt><dd>{{ result.photoCount }} 张</dd></div>
         <div><dt>定位状态</dt><dd><el-tag :type="locationStatusType(result.locationStatus)">{{ locationLabel }}</el-tag></dd></div>
         <div><dt>起始位置</dt><dd>{{ locationAddress }}</dd></div>
         <div><dt>发车时间</dt><dd>{{ formatTime(result.createdAt) }}</dd></div>

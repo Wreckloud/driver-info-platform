@@ -1,6 +1,6 @@
 # 司机出车登记管理系统
 
-面向司机扫码登记和管理员集中管理的轻量系统。司机无需账号，每次出车提交项目、姓名、电话、车牌、车型、数量、目的地、可选备注及可选定位；管理员登录后可查询、修改、软删除和导出记录。发车时间由服务器在提交成功时生成。
+面向司机扫码登记和管理员集中管理的轻量系统。司机进入页面后自动尝试定位，每次出车提交项目、姓名、电话、车牌、车型、数量、目的地、可选备注以及 1–9 张自动压缩照片；管理员登录后可查询、查看照片、修改、软删除和导出记录。发车时间由服务器在提交成功时生成，并支持只能查看和导出的只读账号。
 
 ## 项目结构
 
@@ -53,7 +53,7 @@ CREATE DATABASE driver_info CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 
 默认开发用户名为 `root`，不提供默认数据库密码。启动前请设置 `DB_PASSWORD`；如本机配置不同，同时设置 `DB_URL`、`DB_USERNAME`。Flyway 会在后端启动时自动建表。
 
-项目不提供默认管理员密码。先运行 `deploy/scripts/generate-password.ps1`，再将输出设置为 `ADMIN_PASSWORD_BCRYPT`；默认管理员用户名为 `admin`，也可通过 `ADMIN_USERNAME` 修改。
+项目不提供默认密码。先运行 `deploy/scripts/generate-password.ps1`，分别生成管理员和只读账号的 BCrypt 摘要，再设置 `ADMIN_PASSWORD_BCRYPT` 与 `VIEWER_PASSWORD_BCRYPT`。管理员默认用户名为 `admin`；只读账号通过 `VIEWER_USERNAME` 配置。
 
 ### 2. 启动后端
 

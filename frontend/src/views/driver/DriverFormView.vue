@@ -1,8 +1,8 @@
 <script setup>
-import { computed, reactive, ref } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Location, RefreshRight, Van } from '@element-plus/icons-vue'
+import { Camera, Close, Location, Van } from '@element-plus/icons-vue'
 import { createDriverRecord, resolveLocationAddress } from '@/api/driver'
 import { LOCATION_STATUS_LABELS, locationDisplayText } from '@/constants/location'
 import {
@@ -12,6 +12,7 @@ import {
   mapLocationError,
   saveDriverInfo
 } from '@/utils/driver'
+import { compressPhoto } from '@/utils/photo'
 
 const SUCCESS_KEY = 'driver-submit-success'
 const router = useRouter()
@@ -23,6 +24,9 @@ const submitting = ref(false)
 const confirmVisible = ref(false)
 const pendingPayload = ref(null)
 const pendingLocationAddress = ref('')
+const photoInput = ref()
+const photoItems = ref([])
+const processingPhotos = ref(false)
 let locationRequestSequence = 0
 
 const savedInfo = loadSavedDriverInfo()
@@ -64,7 +68,7 @@ const locationText = computed(() => {
   if (resolvingLocation.value) return '正在解析位置…'
   return locationDisplayText(form.locationStatus, locationAddress.value)
 })
-const locationBusy = computed(() => locating.value || resolvingLocation.value)
+const photoPreviewUrls = computed(() => photoItems.value.map((item) => item.url))
 
 function clearLocation() {
   form.latitude = null
@@ -121,6 +125,39 @@ function locate() {
   )
 }
 
+function openPhotoPicker() {
+  if (photoItems.value.length >= 9 || processingPhotos.value) return
+  photoInput.value?.click()
+}
+
+async function selectPhotos(event) {
+  const selected = Array.from(event.target.files || [])
+  event.target.value = ''
+  if (!selected.length) return
+  const remaining = 9 - photoItems.value.length
+  if (selected.length > remaining) {
+    ElMessage.warning(`最多上传 9 张照片，本次只处理前 ${remaining} 张`)
+  }
+  processingPhotos.value = true
+  try {
+    for (const source of selected.slice(0, remaining)) {
+      try {
+        const file = await compressPhoto(source)
+        photoItems.value.push({ file, url: URL.createObjectURL(file) })
+      } catch (error) {
+        ElMessage.error(error.message)
+      }
+    }
+  } finally {
+    processingPhotos.value = false
+  }
+}
+
+function removePhoto(index) {
+  const [removed] = photoItems.value.splice(index, 1)
+  if (removed) URL.revokeObjectURL(removed.url)
+}
+
 async function clearSavedInfo() {
   await ElMessageBox.confirm('将清除本机记住的姓名、电话、车牌和车型，是否继续？', '清除常用信息', { type: 'warning' })
   clearSavedDriverInfo()
@@ -134,6 +171,14 @@ async function clearSavedInfo() {
 async function requestConfirmation() {
   const valid = await formRef.value.validate().catch(() => false)
   if (!valid || submitting.value) return
+  if (!photoItems.value.length) {
+    ElMessage.warning('请至少拍摄或选择一张照片')
+    return
+  }
+  if (processingPhotos.value) {
+    ElMessage.info('照片正在压缩，请稍候')
+    return
+  }
   pendingPayload.value = {
     ...form,
     project: form.project.trim(),
@@ -154,7 +199,7 @@ async function confirmSubmit() {
   submitting.value = true
   try {
     const payload = pendingPayload.value
-    const result = await createDriverRecord(payload)
+    const result = await createDriverRecord(payload, photoItems.value.map((item) => item.file))
     saveDriverInfo(payload)
     sessionStorage.setItem(SUCCESS_KEY, JSON.stringify(result))
     confirmVisible.value = false
@@ -165,6 +210,13 @@ async function confirmSubmit() {
     submitting.value = false
   }
 }
+
+onMounted(locate)
+
+onUnmounted(() => {
+  locationRequestSequence++
+  photoItems.value.forEach((item) => URL.revokeObjectURL(item.url))
+})
 </script>
 
 <template>
@@ -173,8 +225,8 @@ async function confirmSubmit() {
       <header class="driver-header">
         <div class="brand-mark"><el-icon><Van /></el-icon></div>
         <div>
-          <p class="eyebrow">DRIVER CHECK-IN</p>
-          <h1>司机出车登记</h1>
+          <p class="eyebrow">HAOYUAN HONGTU</p>
+          <h1>信息登记</h1>
           <p>每次出车请重新提交一条记录</p>
         </div>
       </header>
@@ -213,9 +265,24 @@ async function confirmSubmit() {
             <p :class="['location-state', locationTone]">{{ locationText }}</p>
             <small>位置信息仅用于本次出车登记；定位失败或拒绝授权仍可提交。</small>
           </div>
-          <el-button :loading="locationBusy" :disabled="locationBusy" :icon="form.locationStatus === 'SUCCESS' ? RefreshRight : Location" @click="locate">
-            {{ form.locationStatus === 'SUCCESS' ? '重新定位' : '获取当前位置' }}
+          <input ref="photoInput" class="visually-hidden" type="file" accept="image/*" capture="environment" multiple @change="selectPhotos" />
+          <el-button :loading="processingPhotos" :disabled="photoItems.length >= 9" :icon="Camera" @click="openPhotoPicker">
+            {{ photoItems.length ? `继续拍照 ${photoItems.length}/9` : '拍照上传' }}
           </el-button>
+        </section>
+
+        <section class="photo-panel">
+          <div class="photo-panel-heading">
+            <div><strong>出车照片</strong><span>至少 1 张，最多 9 张</span></div>
+            <small>照片会自动压缩，点击缩略图可放大查看</small>
+          </div>
+          <div v-if="photoItems.length" class="photo-grid">
+            <div v-for="(photo, index) in photoItems" :key="photo.url" class="photo-item">
+              <el-image :src="photo.url" fit="cover" :preview-src-list="photoPreviewUrls" :initial-index="index" preview-teleported />
+              <button type="button" aria-label="删除照片" @click="removePhoto(index)"><el-icon><Close /></el-icon></button>
+            </div>
+          </div>
+          <el-empty v-else :image-size="54" description="尚未添加照片" />
         </section>
 
         <el-button class="submit-button" type="primary" size="large" native-type="submit" :loading="submitting">
@@ -250,7 +317,19 @@ async function confirmSubmit() {
           <dt>起始位置</dt>
           <dd>{{ locationDisplayText(pendingPayload.locationStatus, pendingLocationAddress) }}</dd>
         </div>
+        <div><dt>照片</dt><dd>共 {{ photoItems.length }} 张</dd></div>
       </dl>
+      <div v-if="photoItems.length" class="confirm-photo-grid">
+        <el-image
+          v-for="(photo, index) in photoItems"
+          :key="photo.url"
+          :src="photo.url"
+          fit="cover"
+          :preview-src-list="photoPreviewUrls"
+          :initial-index="index"
+          preview-teleported
+        />
+      </div>
       <template #footer>
         <el-button :disabled="submitting" @click="confirmVisible = false">返回修改</el-button>
         <el-button type="primary" :loading="submitting" @click="confirmSubmit">确认无误并提交</el-button>

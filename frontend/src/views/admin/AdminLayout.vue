@@ -25,6 +25,7 @@ async function signOut() {
         <span><strong>出车登记</strong><small>管理后台</small></span>
       </RouterLink>
       <div class="admin-account">
+        <el-tag v-if="auth.admin && !auth.admin.canManage" size="small" type="info">只读账号</el-tag>
         <span>{{ auth.admin?.username }}</span>
         <el-button text :icon="SwitchButton" @click="signOut">退出</el-button>
       </div>

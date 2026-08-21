@@ -5,7 +5,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $projectDir = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 $releaseRoot = Join-Path $projectDir 'release'
-$updateName = 'driver-info-location-address-update'
+$updateName = 'driver-info-platform-1.2.0-update'
 $updateDir = Join-Path $releaseRoot $updateName
 $archiveFile = Join-Path $releaseRoot "$updateName.tar.gz"
 
@@ -58,18 +58,23 @@ if (Test-Path -LiteralPath $updateDir) {
 }
 New-Item -ItemType Directory -Force -Path (Join-Path $updateDir 'artifacts\backend') | Out-Null
 New-Item -ItemType Directory -Force -Path (Join-Path $updateDir 'artifacts\frontend') | Out-Null
+New-Item -ItemType Directory -Force -Path (Join-Path $updateDir 'deploy') | Out-Null
 
-Copy-Item -LiteralPath (Join-Path $projectDir 'backend\target\driver-info-platform-1.1.0.jar') `
+Copy-Item -LiteralPath (Join-Path $projectDir 'backend\target\driver-info-platform-1.2.0.jar') `
     -Destination (Join-Path $updateDir 'artifacts\backend\app.jar')
 Copy-Item -Path (Join-Path $projectDir 'frontend\dist\*') `
     -Destination (Join-Path $updateDir 'artifacts\frontend') -Recurse
+Copy-Item -LiteralPath (Join-Path $projectDir 'deploy\server') `
+    -Destination (Join-Path $updateDir 'deploy\server') -Recurse
+Copy-Item -LiteralPath (Join-Path $projectDir 'docker-compose.server.yml') `
+    -Destination (Join-Path $updateDir 'docker-compose.yml')
 
 if (Test-Path -LiteralPath $archiveFile) {
     Remove-Item -LiteralPath $archiveFile -Force
 }
 Push-Location $updateDir
 try {
-    Invoke-CheckedCommand -Command 'tar' -Arguments @('-czf', $archiveFile, 'artifacts')
+    Invoke-CheckedCommand -Command 'tar' -Arguments @('-czf', $archiveFile, 'artifacts', 'deploy', 'docker-compose.yml')
 }
 finally {
     Pop-Location

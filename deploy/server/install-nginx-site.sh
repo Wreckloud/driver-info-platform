@@ -36,7 +36,7 @@ server {
   listen [::]:80;
   server_name $public_domain;
 
-  client_max_body_size 1m;
+  client_max_body_size 20m;
 
   location / {
     proxy_pass http://127.0.0.1:$web_port;

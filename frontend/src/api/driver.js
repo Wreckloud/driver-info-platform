@@ -1,7 +1,10 @@
 import request from './request'
 
-export async function createDriverRecord(payload) {
-  const response = await request.post('/driver/records', payload)
+export async function createDriverRecord(payload, photos) {
+  const formData = new FormData()
+  formData.append('record', new Blob([JSON.stringify(payload)], { type: 'application/json' }))
+  photos.forEach((photo) => formData.append('photos', photo, photo.name))
+  const response = await request.post('/driver/records', formData, { timeout: 60000 })
   return response.data.data
 }
 

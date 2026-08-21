@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 
 /**
  * 管理员登记记录视图。
@@ -31,5 +32,7 @@ public record DriverRecordVO(
         Instant locatedAt,
         Instant createdAt,
         Instant updatedAt,
-        String updatedBy) {
+        String updatedBy,
+        int photoCount,
+        List<DriverRecordPhotoVO> photos) {
 }

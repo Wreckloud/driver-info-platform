@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wreckloud.driver.mapper.DriverRecordPhotoMapper">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO driver_record_photo (
+            driver_record_id, storage_name, content_type, file_size, width, height, display_order, created_at
+        ) VALUES (
+            #{driverRecordId}, #{storageName}, #{contentType}, #{fileSize},
+            #{width}, #{height}, #{displayOrder}, #{createdAt}
+        )
+    </insert>
+
+    <select id="findByRecordId" resultType="com.wreckloud.driver.domain.DriverRecordPhoto">
+        SELECT id, driver_record_id, storage_name, content_type, file_size,
+               width, height, display_order, created_at
+        FROM driver_record_photo
+        WHERE driver_record_id = #{recordId}
+        ORDER BY display_order, id
+    </select>
+
+    <select id="findActiveById" resultType="com.wreckloud.driver.domain.DriverRecordPhoto">
+        SELECT photo.id, photo.driver_record_id, photo.storage_name, photo.content_type,
+               photo.file_size, photo.width, photo.height, photo.display_order, photo.created_at
+        FROM driver_record_photo photo
+        INNER JOIN driver_record record ON record.id = photo.driver_record_id AND record.deleted = 0
+        WHERE photo.id = #{id}
+    </select>
+</mapper>

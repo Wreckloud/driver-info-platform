@@ -26,5 +26,6 @@ public record DriverRecordSummaryVO(
         BigDecimal longitude,
         String locationAddress,
         BigDecimal locationAccuracy,
+        int photoCount,
         Instant createdAt) {
 }

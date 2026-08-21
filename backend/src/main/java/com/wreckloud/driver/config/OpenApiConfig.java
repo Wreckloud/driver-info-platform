@@ -18,7 +18,7 @@ public class OpenApiConfig {
     public OpenAPI driverInfoOpenApi() {
         return new OpenAPI().info(new Info()
                 .title("司机出车登记管理系统 API")
-                .version("1.1.0")
+                .version("1.2.0")
                 .description("司机登记与管理员后台接口"));
     }
 }

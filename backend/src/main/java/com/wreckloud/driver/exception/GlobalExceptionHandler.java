@@ -3,11 +3,14 @@ package com.wreckloud.driver.exception;
 import com.wreckloud.driver.common.ApiResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -48,9 +51,17 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler({HttpMessageNotReadableException.class,
             MethodArgumentTypeMismatchException.class,
-            MissingServletRequestParameterException.class})
+            MissingServletRequestParameterException.class,
+            MissingServletRequestPartException.class,
+            HttpMediaTypeNotSupportedException.class})
     public ResponseEntity<ApiResult<Void>> handleMalformedRequest(Exception exception) {
         return ResponseEntity.badRequest().body(ApiResult.error("请求参数格式不正确"));
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ApiResult<Void>> handleUploadTooLarge(MaxUploadSizeExceededException exception) {
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
+                .body(ApiResult.error("上传照片总大小超过限制"));
     }
 
     @ExceptionHandler(Exception.class)

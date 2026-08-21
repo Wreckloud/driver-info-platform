@@ -88,7 +88,7 @@ npm run generate:qr
 ./deploy/scripts/backup.sh
 ```
 
-脚本保存 gzip 压缩的 SQL 到 `deploy/backups/`，并删除超过 30 天的同名备份。生产服务器通过 cron 每日执行一次，例如：
+脚本会在 `deploy/backups/` 同时保存 gzip 压缩的 SQL 与照片归档，并删除超过 30 天的同类备份。生产服务器通过 cron 每日执行一次，例如：
 
 ```cron
 20 2 * * * /opt/DriverInfoPlatform/deploy/scripts/backup.sh >> /var/log/driver-info-backup.log 2>&1
@@ -100,7 +100,7 @@ npm run generate:qr
 
 ```sh
 docker compose stop web api
-./deploy/scripts/restore.sh /absolute/path/to/driver_info_20260727_022000.sql.gz
+./deploy/scripts/restore.sh /absolute/path/to/driver_info_20260727_022000.sql.gz /absolute/path/to/driver_photos_20260727_022000.tar.gz
 docker compose start api web
 ```
 

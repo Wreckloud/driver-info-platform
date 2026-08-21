@@ -41,6 +41,7 @@ class AdminAuthControllerTest {
         var result = controller.login(new AdminLoginRequest("admin", "LocalTestPassword123!"), request, response);
 
         assertThat(result.data().username()).isEqualTo("admin");
+        assertThat(result.data().canManage()).isTrue();
         assertThat(request.getSession().getId()).isNotEqualTo(originalSessionId);
         verify(loginAttemptService).recordSuccess(request.getRemoteAddr());
     }

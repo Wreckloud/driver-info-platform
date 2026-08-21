@@ -6,8 +6,10 @@ import { Delete, Download, Search, View } from '@element-plus/icons-vue'
 import { deleteRecord, exportRecords, getRecords } from '@/api/admin'
 import RecordTime from '@/components/RecordTime.vue'
 import { LOCATION_STATUS_LABELS, locationStatusType } from '@/constants/location'
+import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
+const auth = useAuthStore()
 const loading = ref(false)
 const exporting = ref(false)
 const records = ref([])
@@ -161,6 +163,9 @@ onUnmounted(() => {
         <el-table-column prop="remark" label="备注" min-width="180" show-overflow-tooltip>
           <template #default="scope">{{ scope.row.remark || '—' }}</template>
         </el-table-column>
+        <el-table-column prop="photoCount" label="照片" width="80">
+          <template #default="scope">{{ scope.row.photoCount }} 张</template>
+        </el-table-column>
         <el-table-column prop="locationAddress" label="起始位置" min-width="210" show-overflow-tooltip>
           <template #default="scope">
             <span v-if="scope.row.locationStatus === 'SUCCESS'">{{ scope.row.locationAddress || '坐标已获取，地址解析失败' }}</span>
@@ -175,10 +180,10 @@ onUnmounted(() => {
             <RecordTime :value="scope.row.createdAt" :now="currentTime" />
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="150" fixed="right">
+        <el-table-column label="操作" :width="auth.admin?.canManage ? 150 : 80" fixed="right">
           <template #default="scope">
             <el-button link type="primary" :icon="View" @click="router.push(`/admin/records/${scope.row.id}`)">详情</el-button>
-            <el-button link type="danger" :icon="Delete" @click="remove(scope.row)">删除</el-button>
+            <el-button v-if="auth.admin?.canManage" link type="danger" :icon="Delete" @click="remove(scope.row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -196,15 +201,16 @@ onUnmounted(() => {
             <div><dt>数量</dt><dd>{{ record.quantity || '—' }}</dd></div>
             <div><dt>目的地</dt><dd>{{ record.destination }}</dd></div>
             <div><dt>备注</dt><dd>{{ record.remark || '—' }}</dd></div>
+            <div><dt>照片</dt><dd>{{ record.photoCount }} 张</dd></div>
             <div><dt>起始位置</dt><dd>{{ record.locationStatus === 'SUCCESS' ? (record.locationAddress || '坐标已获取，地址解析失败') : LOCATION_STATUS_LABELS[record.locationStatus] }}</dd></div>
             <div>
               <dt>发车时间</dt>
               <dd><RecordTime :value="record.createdAt" :now="currentTime" /></dd>
             </div>
           </dl>
-          <div class="record-actions">
+          <div :class="['record-actions', { 'record-actions--readonly': !auth.admin?.canManage }]">
             <el-button type="primary" plain :icon="View" @click="router.push(`/admin/records/${record.id}`)">详情</el-button>
-            <el-button type="danger" plain :icon="Delete" @click="remove(record)">删除</el-button>
+            <el-button v-if="auth.admin?.canManage" type="danger" plain :icon="Delete" @click="remove(record)">删除</el-button>
           </div>
         </article>
         <el-empty v-if="!records.length && !loading" description="暂无登记记录" />

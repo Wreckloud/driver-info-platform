@@ -1,5 +1,6 @@
 param(
-    [string]$AdminUsername = 'admin'
+    [string]$AdminUsername = 'admin',
+    [string]$ViewerUsername = 'HYHTLLWLYXGS'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -8,6 +9,7 @@ $runtimePath = Join-Path $projectPath 'runtime'
 $mysqlDataPath = Join-Path $runtimePath 'mysql-data'
 $logPath = Join-Path $runtimePath 'logs'
 $passwordHashPath = Join-Path $runtimePath 'admin-password.hash'
+$viewerPasswordHashPath = Join-Path $runtimePath 'viewer-password.hash'
 $mysqlPort = 3307
 $backendPort = 8080
 $frontendPort = 5173
@@ -69,6 +71,29 @@ if (-not (Test-Path -LiteralPath $passwordHashPath)) {
     }
 }
 
+if (-not (Test-Path -LiteralPath $viewerPasswordHashPath)) {
+    $securePassword = Read-Host 'Set the local read-only account password (at least 12 characters)' -AsSecureString
+    $credential = [System.Net.NetworkCredential]::new('', $securePassword)
+    $plainPassword = $credential.Password
+    if ($plainPassword.Length -lt 12) {
+        throw 'Read-only account password must contain at least 12 characters.'
+    }
+    try {
+        $env:ADMIN_PASSWORD_PLAIN = $plainPassword
+        Push-Location (Join-Path $projectPath 'backend')
+        try {
+            $passwordHash = mvn -q compile org.codehaus.mojo:exec-maven-plugin:3.5.1:java '-Dexec.mainClass=com.wreckloud.driver.tool.PasswordHashTool'
+        } finally {
+            Pop-Location
+        }
+        Set-Content -LiteralPath $viewerPasswordHashPath -Value $passwordHash.Trim() -Encoding utf8NoBOM
+    } finally {
+        Remove-Item Env:ADMIN_PASSWORD_PLAIN -ErrorAction SilentlyContinue
+        $plainPassword = $null
+        $credential = $null
+    }
+}
+
 $mysqlArguments = @(
     '--no-defaults',
     "--basedir=`"$mysqlBasePath`"",
@@ -93,6 +118,9 @@ $env:DB_USERNAME = 'root'
 $env:DB_PASSWORD = ''
 $env:ADMIN_USERNAME = $AdminUsername
 $env:ADMIN_PASSWORD_BCRYPT = (Get-Content -LiteralPath $passwordHashPath -Raw).Trim()
+$env:VIEWER_USERNAME = $ViewerUsername
+$env:VIEWER_PASSWORD_BCRYPT = (Get-Content -LiteralPath $viewerPasswordHashPath -Raw).Trim()
+$env:PHOTO_STORAGE_PATH = (Join-Path $runtimePath 'uploads')
 $env:TENCENT_MAP_KEY = ''
 $env:SESSION_COOKIE_SECURE = 'false'
 
@@ -103,7 +131,8 @@ try {
         -RedirectStandardError (Join-Path $logPath 'backend-error.log')
 } finally {
     Remove-Item Env:DB_URL, Env:DB_USERNAME, Env:DB_PASSWORD, Env:ADMIN_USERNAME, `
-        Env:ADMIN_PASSWORD_BCRYPT, Env:TENCENT_MAP_KEY, Env:SESSION_COOKIE_SECURE -ErrorAction SilentlyContinue
+        Env:ADMIN_PASSWORD_BCRYPT, Env:VIEWER_USERNAME, Env:VIEWER_PASSWORD_BCRYPT, Env:PHOTO_STORAGE_PATH, `
+        Env:TENCENT_MAP_KEY, Env:SESSION_COOKIE_SECURE -ErrorAction SilentlyContinue
 }
 Wait-Port $backendPort 60
 
@@ -125,4 +154,5 @@ Write-Output 'Local environment is ready.'
 Write-Output "Driver page: http://127.0.0.1:$frontendPort/driver"
 Write-Output "Admin page:  http://127.0.0.1:$frontendPort/admin/login"
 Write-Output "Admin user:  $AdminUsername"
+Write-Output "Viewer user: $ViewerUsername"
 Write-Output "Logs:        $logPath"

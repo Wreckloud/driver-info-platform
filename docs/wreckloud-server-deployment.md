@@ -38,7 +38,7 @@ cd D:\Portfolio\project\DriverInfoPlatform
 脚本会运行后端和前端测试、构建 JAR 与前端静态文件、生成正式二维码，然后输出：
 
 ```text
-release\driver-info-platform-1.1.0.tar.gz
+release\driver-info-platform-1.2.0.tar.gz
 ```
 
 压缩包包含 `.env`，不得公开上传或提交到 Git。
@@ -49,8 +49,8 @@ release\driver-info-platform-1.1.0.tar.gz
 
 ```sh
 mkdir -p /home/wreckloud/apps
-tar -xzf /home/wreckloud/driver-info-platform-1.1.0.tar.gz -C /home/wreckloud/apps
-cd /home/wreckloud/apps/driver-info-platform-1.1.0
+tar -xzf /home/wreckloud/driver-info-platform-1.2.0.tar.gz -C /home/wreckloud/apps
+cd /home/wreckloud/apps/driver-info-platform-1.2.0
 chmod +x deploy/server/*.sh
 ./deploy/server/deploy.sh
 ```
@@ -71,12 +71,18 @@ chmod +x deploy/server/*.sh
 ./deploy/server/reset-admin-password.sh
 ```
 
+首次配置只读账号时运行以下脚本，并按提示输入已确认的密码。账号固定为 `HYHTLLWLYXGS`，密码只以 BCrypt 摘要写入 `.env`：
+
+```sh
+./deploy/server/configure-viewer-account.sh
+```
+
 ## 4. 接入宿主机 Nginx
 
 先安装 HTTP 站点配置。该脚本会执行 `nginx -t`，只有检查通过才会重新加载 Nginx：
 
 ```sh
-sudo /home/wreckloud/apps/driver-info-platform-1.1.0/deploy/server/install-nginx-site.sh
+sudo /home/wreckloud/apps/driver-info-platform-1.2.0/deploy/server/install-nginx-site.sh
 ```
 
 确认 `http://driver.wreckloud.com/driver` 能到达页面后，使用现有 Certbot 签发独立证书并自动启用 HTTPS：
@@ -109,10 +115,10 @@ artifacts/qrcode/driver-qr.svg
 ./deploy/server/backup.sh
 ```
 
-备份保存在发布目录的 `backups/`，默认删除超过 30 天的历史文件。恢复属于覆盖性操作，应先停止 API 并再次备份当前数据库，再运行：
+备份会同时生成数据库 `driver_info_*.sql.gz` 和照片 `driver_photos_*.tar.gz`，保存在发布目录的 `backups/`，默认保留 30 天。恢复属于覆盖性操作，应先停止业务写入并再次备份当前数据，再运行：
 
 ```sh
-./deploy/server/restore.sh /absolute/path/to/driver_info_backup.sql.gz
+./deploy/server/restore.sh /absolute/path/to/driver_info_backup.sql.gz /absolute/path/to/driver_photos_backup.tar.gz
 ```
 
 ## 注意事项

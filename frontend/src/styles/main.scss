@@ -16,6 +16,7 @@
 body { margin: 0; min-width: 320px; min-height: 100vh; }
 button, input { font: inherit; }
 a { color: inherit; text-decoration: none; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 
 .eyebrow {
   margin: 0 0 6px;
@@ -82,6 +83,17 @@ a { color: inherit; text-decoration: none; }
 .location-state.success { color: #16815a; }
 .location-state.warning { color: #b7770d; }
 .location-state.neutral, .location-copy small { color: var(--muted); }
+.photo-panel { margin: 0 0 24px; padding: 18px; border: 1px solid var(--line); border-radius: 16px; background: #f7faf8; }
+.photo-panel-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 14px; }
+.photo-panel-heading strong, .photo-panel-heading span { display: block; }
+.photo-panel-heading span, .photo-panel-heading small { margin-top: 4px; color: var(--muted); font-size: 12px; }
+.photo-grid, .confirm-photo-grid, .admin-photo-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.photo-item { position: relative; aspect-ratio: 1; overflow: hidden; border-radius: 12px; background: #e6eeeb; }
+.photo-item .el-image, .confirm-photo-grid .el-image, .admin-photo-grid .el-image { width: 100%; height: 100%; cursor: zoom-in; }
+.photo-item button { position: absolute; top: 6px; right: 6px; width: 28px; height: 28px; padding: 0; display: grid; place-items: center; border: 0; border-radius: 50%; color: white; background: rgba(16, 36, 34, 0.72); cursor: pointer; }
+.photo-panel .el-empty { padding: 8px 0; }
+.confirm-photo-grid { margin-top: 16px; }
+.confirm-photo-grid .el-image, .admin-photo-grid .el-image { aspect-ratio: 1; border-radius: 10px; background: #e6eeeb; }
 .submit-button { width: 100%; min-height: 48px; border-radius: 13px !important; background: var(--primary) !important; border-color: var(--primary) !important; font-weight: 800; }
 .submit-button:hover { background: var(--primary-dark) !important; }
 .text-action, .back-link { display: flex; align-items: center; gap: 5px; margin: 18px auto 0; border: 0; color: var(--muted); background: none; cursor: pointer; }
@@ -100,6 +112,7 @@ a { color: inherit; text-decoration: none; }
 .confirm-list dd { margin: 0; color: #203f3c; font-weight: 700; text-align: right; overflow-wrap: anywhere; }
 .driver-confirm-dialog { max-width: calc(100vw - 28px); border-radius: 18px !important; }
 .driver-confirm-dialog .el-dialog__title { color: #173d3a; font-weight: 800; }
+.driver-confirm-dialog .el-dialog__body { max-height: calc(100vh - 190px); overflow-y: auto; }
 
 .login-page {
   min-height: 100vh;
@@ -149,9 +162,12 @@ a { color: inherit; text-decoration: none; }
 .back-link { margin: 0 0 18px; }
 .detail-grid { display: grid; grid-template-columns: 1.35fr 0.8fr; gap: 20px; align-items: start; }
 .detail-card { padding: 26px; }
+.photo-detail-card { grid-column: 1 / -1; order: 2; }
+.readonly-notice { margin-bottom: 18px; }
+.admin-photo-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .section-heading h1, .section-heading h2 { margin: 0; color: #173d3a; }
 .record-id { color: var(--muted); font-family: ui-monospace, monospace; }
-.readonly-card { position: sticky; top: 94px; }
+.readonly-card { position: sticky; top: 94px; order: 1; }
 .detail-list { margin: 0; }
 .detail-list div { padding: 13px 0; border-bottom: 1px solid var(--line); }
 .detail-list div:last-child { border-bottom: 0; }
@@ -177,6 +193,7 @@ a { color: inherit; text-decoration: none; }
   .record-item dt { color: var(--muted); }
   .record-item dd { margin: 0; overflow-wrap: anywhere; }
   .record-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .record-actions--readonly { grid-template-columns: 1fr; }
   .record-actions .el-button { margin: 0; }
   .records-pagination { justify-content: center; overflow-x: auto; }
   .records-pagination .el-pagination__sizes, .records-pagination .el-pagination__total { display: none; }
@@ -196,4 +213,5 @@ a { color: inherit; text-decoration: none; }
   .page-heading { align-items: stretch; flex-direction: column; }
   .page-heading .el-button { width: 100%; }
   .detail-card { padding: 20px; }
+  .photo-grid, .confirm-photo-grid, .admin-photo-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }

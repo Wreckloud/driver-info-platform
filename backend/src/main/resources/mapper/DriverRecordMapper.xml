@@ -13,7 +13,9 @@
     <sql id="columns">
         id, submission_token, project, driver_name, phone, license_plate, vehicle_type, quantity, destination, remark,
         latitude, longitude, location_address, location_accuracy, location_status, located_at,
-        created_at, updated_at, updated_by, deleted, deleted_at, deleted_by
+        created_at, updated_at, updated_by, deleted, deleted_at, deleted_by,
+        (SELECT COUNT(*) FROM driver_record_photo photo
+         WHERE photo.driver_record_id = driver_record.id) AS photo_count
     </sql>
 
     <sql id="activeFilters">

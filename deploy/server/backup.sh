@@ -8,6 +8,8 @@ timestamp=$(date +%Y%m%d_%H%M%S)
 sql_file="$backup_dir/.driver_info_${timestamp}.sql"
 backup_file="$backup_dir/driver_info_${timestamp}.sql.gz"
 compressed_file="$backup_file.tmp"
+photo_backup_file="$backup_dir/driver_photos_${timestamp}.tar.gz"
+photo_backup_tmp="$photo_backup_file.tmp"
 
 [ -f "$env_file" ] || { echo ".env does not exist" >&2; exit 1; }
 
@@ -26,7 +28,7 @@ mysql_password=$(dotenv_value MYSQL_PASSWORD)
 mysql_database=$(dotenv_value MYSQL_DATABASE)
 mysql_container=${mysql_container:-lycan-mysql}
 mkdir -p "$backup_dir"
-trap 'rm -f "$sql_file" "$compressed_file"' EXIT
+trap 'rm -f "$sql_file" "$compressed_file" "$photo_backup_tmp"' EXIT
 
 docker exec -i -e MYSQL_PWD="$mysql_password" "$mysql_container" \
   mysqldump --single-transaction --quick --routines --triggers \
@@ -34,5 +36,11 @@ docker exec -i -e MYSQL_PWD="$mysql_password" "$mysql_container" \
 gzip -c "$sql_file" > "$compressed_file"
 mv "$compressed_file" "$backup_file"
 
+cd "$project_dir"
+docker compose --env-file "$env_file" exec -T api tar -czf - -C /app/uploads . > "$photo_backup_tmp"
+mv "$photo_backup_tmp" "$photo_backup_file"
+
 find "$backup_dir" -type f -name 'driver_info_*.sql.gz' -mtime +30 -delete
-echo "Backup created: $backup_file"
+find "$backup_dir" -type f -name 'driver_photos_*.tar.gz' -mtime +30 -delete
+echo "Database backup created: $backup_file"
+echo "Photo backup created: $photo_backup_file"

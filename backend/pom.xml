@@ -13,7 +13,7 @@
 
     <groupId>com.wreckloud</groupId>
     <artifactId>driver-info-platform</artifactId>
-    <version>1.1.0</version>
+    <version>1.2.0</version>
     <name>driver-info-platform</name>
     <description>司机出车登记管理系统</description>
 

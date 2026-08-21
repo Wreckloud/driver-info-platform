@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.springframework.web.multipart.MultipartFile;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.ByteArrayInputStream;
@@ -47,12 +48,17 @@ class DriverRecordServiceImplTest {
     private DriverRecordMapper mapper;
     @Mock
     private ReverseGeocodingService geocodingService;
+    @Mock
+    private DriverRecordPhotoService photoService;
+    @Mock
+    private MultipartFile photo;
 
     private DriverRecordServiceImpl service;
 
     @BeforeEach
     void setUp() {
-        service = new DriverRecordServiceImpl(mapper, geocodingService, Clock.fixed(NOW, ZoneOffset.UTC));
+        service = new DriverRecordServiceImpl(
+                mapper, geocodingService, photoService, Clock.fixed(NOW, ZoneOffset.UTC));
     }
 
     @Test
@@ -66,13 +72,14 @@ class DriverRecordServiceImplTest {
         DriverRecordSummaryVO result = service.create(new DriverRecordCreateRequest(
                 token, " 冷链A1 ", " 张三 ", "13800138000", "京a12345", " 厢式货车 ",
                 " 20件（冻品） ", " 天津 ", " 需要冷藏 ",
-                LocationStatus.NOT_REQUESTED, null, null, null, null));
+                LocationStatus.NOT_REQUESTED, null, null, null, null), List.of(photo));
 
         assertThat(result.id()).isEqualTo(10L);
         assertThat(result.project()).isEqualTo("冷链A1");
         assertThat(result.licensePlate()).isEqualTo("京A12345");
         assertThat(result.quantity()).isEqualTo("20件（冻品）");
         assertThat(result.remark()).isEqualTo("需要冷藏");
+        assertThat(result.photoCount()).isEqualTo(1);
         assertThat(result.createdAt()).isEqualTo(NOW);
         verify(geocodingService, never()).resolveAddress(any(), any());
     }
@@ -85,7 +92,7 @@ class DriverRecordServiceImplTest {
         DriverRecordSummaryVO result = service.create(new DriverRecordCreateRequest(
                 UUID.fromString(existing.getSubmissionToken()), "业务B2", "李四", "13900139000", "沪B88888", "货车",
                 "10箱", "苏州", null,
-                LocationStatus.NOT_REQUESTED, null, null, null, null));
+                LocationStatus.NOT_REQUESTED, null, null, null, null), List.of(photo));
 
         assertThat(result.id()).isEqualTo(existing.getId());
         assertThat(result.locationAddress()).isEqualTo("北京市东城区");
@@ -139,7 +146,8 @@ class DriverRecordServiceImplTest {
             assertThat(workbook.getSheetAt(0).getRow(0).getCell(1).getStringCellValue()).isEqualTo("项目");
             assertThat(workbook.getSheetAt(0).getRow(0).getCell(6).getStringCellValue()).isEqualTo("数量");
             assertThat(workbook.getSheetAt(0).getRow(0).getCell(8).getStringCellValue()).isEqualTo("备注");
-            assertThat(workbook.getSheetAt(0).getRow(0).getCell(15).getStringCellValue()).isEqualTo("发车时间");
+            assertThat(workbook.getSheetAt(0).getRow(0).getCell(9).getStringCellValue()).isEqualTo("照片数量");
+            assertThat(workbook.getSheetAt(0).getRow(0).getCell(16).getStringCellValue()).isEqualTo("发车时间");
             assertThat(workbook.getSheetAt(0).getRow(1).getCell(1).getStringCellValue()).isEqualTo("冷链A1");
             assertThat(workbook.getSheetAt(0).getRow(1).getCell(6).getStringCellValue()).isEqualTo("20件（冻品）");
             assertThat(workbook.getSheetAt(0).getRow(1).getCell(8).getStringCellValue()).isEqualTo("需要冷藏");
@@ -158,6 +166,7 @@ class DriverRecordServiceImplTest {
         record.setQuantity("20件（冻品）");
         record.setDestination("天津");
         record.setRemark("需要冷藏");
+        record.setPhotoCount(1);
         record.setLocationStatus(LocationStatus.SUCCESS);
         record.setLatitude(new BigDecimal("39.9042000"));
         record.setLongitude(new BigDecimal("116.4074000"));

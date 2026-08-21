@@ -21,7 +21,7 @@ services:
       retries: 12
 
   api:
-    image: driver-info-platform-api:${APP_VERSION:-1.1.0}
+    image: driver-info-platform-api:${APP_VERSION:-1.2.0}
     build:
       context: ./backend
     restart: unless-stopped
@@ -31,6 +31,9 @@ services:
       DB_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSWORD is required}
       ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
       ADMIN_PASSWORD_BCRYPT: ${ADMIN_PASSWORD_BCRYPT:?ADMIN_PASSWORD_BCRYPT is required}
+      VIEWER_USERNAME: ${VIEWER_USERNAME:?VIEWER_USERNAME is required}
+      VIEWER_PASSWORD_BCRYPT: ${VIEWER_PASSWORD_BCRYPT:?VIEWER_PASSWORD_BCRYPT is required}
+      PHOTO_STORAGE_PATH: /app/uploads
       TENCENT_MAP_KEY: ${TENCENT_MAP_KEY:?TENCENT_MAP_KEY is required}
       SESSION_COOKIE_SECURE: "true"
       SPRINGDOC_API_DOCS_ENABLED: "false"
@@ -40,9 +43,11 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+    volumes:
+      - photo_data:/app/uploads
 
   web:
-    image: driver-info-platform-web:${APP_VERSION:-1.1.0}
+    image: driver-info-platform-web:${APP_VERSION:-1.2.0}
     build:
       context: .
       dockerfile: frontend/Dockerfile
@@ -59,3 +64,4 @@ services:
 
 volumes:
   mysql_data:
+  photo_data:

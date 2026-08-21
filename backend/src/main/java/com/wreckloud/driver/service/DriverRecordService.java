@@ -6,8 +6,10 @@ import com.wreckloud.driver.dto.DriverRecordQuery;
 import com.wreckloud.driver.dto.DriverRecordUpdateRequest;
 import com.wreckloud.driver.vo.DriverRecordSummaryVO;
 import com.wreckloud.driver.vo.DriverRecordVO;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.OutputStream;
+import java.util.List;
 
 /**
  * 司机登记业务服务。
@@ -17,7 +19,7 @@ import java.io.OutputStream;
  */
 public interface DriverRecordService {
 
-    DriverRecordSummaryVO create(DriverRecordCreateRequest request);
+    DriverRecordSummaryVO create(DriverRecordCreateRequest request, List<MultipartFile> photos);
 
     PageResult<DriverRecordVO> page(DriverRecordQuery query);
 

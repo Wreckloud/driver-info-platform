@@ -2,7 +2,7 @@ name: driver_info_platform
 
 services:
   api:
-    image: driver-info-platform-api:${APP_VERSION:-1.1.0}
+    image: driver-info-platform-api:${APP_VERSION:-1.2.0}
     build:
       context: .
       dockerfile: deploy/server/Dockerfile.api
@@ -13,6 +13,9 @@ services:
       DB_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSWORD is required}
       ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
       ADMIN_PASSWORD_BCRYPT: ${ADMIN_PASSWORD_BCRYPT:?ADMIN_PASSWORD_BCRYPT is required}
+      VIEWER_USERNAME: ${VIEWER_USERNAME:?VIEWER_USERNAME is required}
+      VIEWER_PASSWORD_BCRYPT: ${VIEWER_PASSWORD_BCRYPT:?VIEWER_PASSWORD_BCRYPT is required}
+      PHOTO_STORAGE_PATH: /app/uploads
       TENCENT_MAP_KEY: ${TENCENT_MAP_KEY:?TENCENT_MAP_KEY is required}
       SESSION_COOKIE_SECURE: "true"
       SPRINGDOC_API_DOCS_ENABLED: "false"
@@ -25,6 +28,8 @@ services:
     networks:
       - app
       - existing_mysql
+    volumes:
+      - photo_data:/app/uploads
     healthcheck:
       test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:8080/actuator/health | grep -q '\"status\":\"UP\"'"]
       interval: 10s
@@ -38,7 +43,7 @@ services:
         max-file: "3"
 
   web:
-    image: driver-info-platform-web:${APP_VERSION:-1.1.0}
+    image: driver-info-platform-web:${APP_VERSION:-1.2.0}
     build:
       context: .
       dockerfile: deploy/server/Dockerfile.web
@@ -68,3 +73,6 @@ networks:
   existing_mysql:
     external: true
     name: ${EXISTING_MYSQL_NETWORK:-deploy_lycan_net}
+
+volumes:
+  photo_data:

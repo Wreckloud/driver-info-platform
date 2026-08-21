@@ -6,10 +6,48 @@ param(
 $ErrorActionPreference = 'Stop'
 $baseUrl = 'http://127.0.0.1:5173'
 $session = New-Object Microsoft.PowerShell.Commands.WebRequestSession
+Add-Type -AssemblyName System.Net.Http
+Add-Type -AssemblyName System.Drawing
 
 function Assert-True([bool]$Condition, [string]$Message) {
     if (-not $Condition) {
         throw $Message
+    }
+}
+
+function New-TestPhotoBytes {
+    $bitmap = [System.Drawing.Bitmap]::new(64, 48)
+    $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
+    $stream = [System.IO.MemoryStream]::new()
+    try {
+        $graphics.Clear([System.Drawing.Color]::LightGray)
+        $bitmap.Save($stream, [System.Drawing.Imaging.ImageFormat]::Jpeg)
+        return $stream.ToArray()
+    } finally {
+        $graphics.Dispose()
+        $bitmap.Dispose()
+        $stream.Dispose()
+    }
+}
+
+function Invoke-DriverCreate([string]$Json, [byte[]]$PhotoBytes) {
+    $client = [System.Net.Http.HttpClient]::new()
+    $multipart = [System.Net.Http.MultipartFormDataContent]::new()
+    try {
+        $recordContent = [System.Net.Http.StringContent]::new($Json, [System.Text.Encoding]::UTF8, 'application/json')
+        $multipart.Add($recordContent, 'record')
+        $photoContent = [System.Net.Http.ByteArrayContent]::new($PhotoBytes)
+        $photoContent.Headers.ContentType = [System.Net.Http.Headers.MediaTypeHeaderValue]::new('image/jpeg')
+        $multipart.Add($photoContent, 'photos', 'local-test.jpg')
+        $response = $client.PostAsync("$baseUrl/api/driver/records", $multipart).GetAwaiter().GetResult()
+        $body = $response.Content.ReadAsStringAsync().GetAwaiter().GetResult()
+        if (-not $response.IsSuccessStatusCode) {
+            throw "Driver create request failed: $($response.StatusCode) $body"
+        }
+        return $body | ConvertFrom-Json
+    } finally {
+        $multipart.Dispose()
+        $client.Dispose()
     }
 }
 
@@ -31,9 +69,11 @@ $createBody = @{
     locationStatus = 'NOT_REQUESTED'
 } | ConvertTo-Json
 
-$created = Invoke-RestMethod -Method Post -Uri "$baseUrl/api/driver/records" -ContentType 'application/json' -Body $createBody
-$repeated = Invoke-RestMethod -Method Post -Uri "$baseUrl/api/driver/records" -ContentType 'application/json' -Body $createBody
+$photoBytes = New-TestPhotoBytes
+$created = Invoke-DriverCreate -Json $createBody -PhotoBytes $photoBytes
+$repeated = Invoke-DriverCreate -Json $createBody -PhotoBytes $photoBytes
 Assert-True ($created.data.id -eq $repeated.data.id) 'Idempotent submission test failed.'
+Assert-True ($created.data.photoCount -eq 1) 'Photo upload test failed.'
 
 $csrf = Invoke-RestMethod -Method Get -Uri "$baseUrl/api/admin/auth/csrf" -WebSession $session
 $csrfHeaders = @{}
@@ -66,6 +106,7 @@ $updated = Invoke-RestMethod -Method Put -Uri "$baseUrl/api/admin/records/$($cre
 Assert-True ($updated.data.destination -eq '修改后的测试目的地') 'Record update test failed.'
 Assert-True ($updated.data.quantity -eq '10箱') 'Text quantity update test failed.'
 Assert-True ($updated.data.remark -eq '修改后的测试备注') 'Remark update test failed.'
+Assert-True ($updated.data.photoCount -eq 1 -and $updated.data.photos.Count -eq 1) 'Administrator photo detail test failed.'
 
 $runtimePath = Join-Path ([System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))) 'runtime'
 $exportPath = Join-Path $runtimePath 'local-test-export.xlsx'
