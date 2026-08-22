@@ -17,8 +17,8 @@ frontend/auto-imports.d.ts
 # Deployment secrets and runtime data
 .env
 runtime/
-deploy/certs/*.pem
-deploy/backups/
+docs/
+backups/
 release/
 
 # OS

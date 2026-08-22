@@ -7,6 +7,5 @@
 **/dist
 **/dist-qr
 **/target
-deploy/certs/*.pem
-deploy/backups
+backups
 release
